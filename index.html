@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senna's Script Engine</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <h1>Script Engine</h1>
+        <span class="badge">March 18, 2026</span>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Research Panel -->
+    <section class="research-panel" id="researchPanel">
+      <button class="research-toggle" id="researchToggle">
+        <span class="research-toggle-icon">&#9662;</span>
+        Research Summary
+      </button>
+      <div class="research-content" id="researchContent">
+        <div class="research-grid">
+          <div class="research-card">
+            <h3>Trending Formats</h3>
+            <ul>
+              <li><strong>Problem-Solution</strong> — pain hook → immediate fix</li>
+              <li><strong>Contrarian/Hot Takes</strong> — polarizing openers for comment distribution</li>
+              <li><strong>Lo-Fi Unfiltered Rants</strong> — raw voiceover, authenticity over polish</li>
+              <li><strong>Step-by-Step Walkthroughs</strong> — structured, actionable guidance</li>
+              <li><strong>Quiet Flex Authority</strong> — calm, confident, intentional energy</li>
+              <li><strong>Transformation/Before-After</strong> — client wins, system reveals</li>
+              <li><strong>Authority Callouts</strong> — "what nobody tells you" framing</li>
+              <li><strong>3 Mistakes Lists</strong> — numbered pain points driving saves</li>
+            </ul>
+          </div>
+          <div class="research-card">
+            <h3>TikTok Insights</h3>
+            <ul>
+              <li>Hook must land in the first word</li>
+              <li>Lo-fi/unpolished outperforms studio quality</li>
+              <li>Completion rate is the #1 ranking signal</li>
+              <li>60+ second content with sustained retention now favored</li>
+              <li>Comment-driving content gets algorithmic boost</li>
+            </ul>
+          </div>
+          <div class="research-card">
+            <h3>Instagram Reels / Trial Reels</h3>
+            <ul>
+              <li>Original audio gets algorithmic preference</li>
+              <li>Trial Reels should NOT be shared to grid after performing</li>
+              <li>DM automation pairing is the lead-gen power move</li>
+              <li>Voiceovers preferred over text overlays</li>
+              <li>3-5 hashtags max; watch time > vanity metrics</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="filters">
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all" data-group="platform">All</button>
+        <button class="filter-btn" data-filter="tiktok" data-group="platform">TikTok</button>
+        <button class="filter-btn" data-filter="instagram" data-group="platform">Reels</button>
+      </div>
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all" data-group="type">All Types</button>
+        <button class="filter-btn" data-filter="value" data-group="type">Value</button>
+        <button class="filter-btn" data-filter="education" data-group="type">Education</button>
+        <button class="filter-btn" data-filter="entertainment" data-group="type">Entertainment</button>
+        <button class="filter-btn" data-filter="soft sell" data-group="type">Soft Sell</button>
+      </div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search scripts...">
+      </div>
+    </section>
+
+    <!-- Content Mix Bar -->
+    <section class="mix-bar" id="mixBar"></section>
+
+    <!-- Scripts Grid -->
+    <section class="scripts-grid" id="scriptsGrid"></section>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <p>No scripts match your filters.</p>
+    </div>
+  </main>
+
+  <!-- Script Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="scripts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
