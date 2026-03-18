@@ -1,0 +1,233 @@
+# Senna's Video Scripts — March 18, 2026
+
+## Research Summary
+
+**Trending formats identified across TikTok and Instagram Reels (March 2026):**
+
+- **Problem-Solution** (pain point hook → immediate fix) — dominating TikTok engagement
+- **Contrarian/Hot Takes** — polarizing openers driving comment-driven distribution
+- **Lo-Fi Unfiltered Rants** — raw voiceover paired with mundane visuals; authenticity over polish
+- **Educational Micro-Series** — numbered episodes rewarded by TikTok's binge algorithm
+- **Step-by-Step Walkthroughs** — structured, actionable guidance outperforming vague advice
+- **"Quiet Flex" Aesthetic** — calm, confident, intentional energy replacing loud/flashy content
+- **Transformation/Before-After** — client wins and system reveals for Instagram warm audiences
+- **Authority Callouts** — "Here's what nobody tells you" framing backed by real credentials
+
+**Platform notes:**
+- TikTok: hook must land in first word; lo-fi/unpolished outperforms studio; completion rate is king; 60+ second content with sustained retention now favored
+- Instagram Reels/Trial Reels: original audio gets algorithmic boost; Trial Reels should NOT be shared to grid after performing well; DM automation pairing is the lead-gen power move; voiceovers preferred; 3-5 hashtags max
+
+**Content mix:** 8 value/education/entertainment, 2 soft sell. No topic repeated more than twice.
+
+---
+
+## SCRIPT 1 — TIKTOK
+**TOPIC:** Building and running a sales team (commission-only hiring)
+**TYPE:** Value
+**TRENDING FORMAT USED:** Contrarian Take
+
+**HOOK OPTION A:** Stop hiring closers. Seriously. Stop it.
+
+**HOOK OPTION B:** The reason your sales team keeps quitting has nothing to do with the money.
+
+**SCRIPT:**
+
+Stop hiring closers. You do not have a closer problem. You have an infrastructure problem. Every coach I talk to says the same thing. I hired a closer, they did three calls, disappeared, and now I am back on the phones. Yeah. Because you handed someone a phone and said go sell. No CRM. No pipeline. No lead scoring. No accountability system. No comp plan that actually makes sense past month one. You gave them a Calendly link and a prayer. Here is what actually works. Before you hire a single person, build the backend. Get your pipeline tracked. Get your lead sources tagged. Get your stages defined so a closer can log in day one and see exactly what they are walking into. Then you write the comp plan around performance windows, not flat percentages. You build weekly scorecards. You build a review rhythm. Now when that closer shows up, they stay. Because the system holds them. Not your energy. Not your Slack messages. The system. Closers do not quit good systems. They quit chaos.
+
+**CTA OPTION A:** Save this for when you are ready to actually build a team that stays.
+
+**CTA OPTION B:** Follow for more on building sales ops that do not depend on you.
+
+---
+
+## SCRIPT 2 — TIKTOK
+**TOPIC:** AI and automation tools for sales ops
+**TYPE:** Education
+**TRENDING FORMAT USED:** Step-by-Step Walkthrough
+
+**HOOK OPTION A:** Three automations that replaced a full-time VA in my sales operation.
+
+**HOOK OPTION B:** I cut fifteen hours a week from my backend with three Zapier flows. Here they are.
+
+**SCRIPT:**
+
+Three automations that replaced a full-time VA in my sales operation. Number one. Lead routing. Every time a new lead hits my Airtable CRM, a Zapier trigger checks the lead source, the time zone, and the offer they opted into. Then it auto-assigns them to the right setter based on availability. No manual sorting. No spreadsheet. No one sitting there copy-pasting names into a Google Sheet. Number two. No-show follow-up. If a booked call gets marked as no-show in the CRM, a Zap fires a three-touch SMS and email sequence automatically. First message goes out within five minutes. That alone recovered eleven calls last month. Number three. End-of-day reporting. Every night at nine PM, a Zap pulls the day's pipeline data from Airtable and drops a formatted summary into a Slack channel. Show rate. Close rate. Revenue. Cash collected. My entire team sees it without me building a single report. These are not complex builds. Each one took under an hour to set up. But they run twenty-four seven and they do not call in sick. If you are still doing this stuff manually, you are burning time you do not have.
+
+**CTA OPTION A:** Follow for more automations that actually move the needle.
+
+**CTA OPTION B:** Save this and go build the first one today. It takes thirty minutes.
+
+---
+
+## SCRIPT 3 — TIKTOK
+**TOPIC:** Mindset for operators (ownership vs. employment mindset)
+**TYPE:** Entertainment / Hot Take
+**TRENDING FORMAT USED:** Unfiltered Rant
+
+**HOOK OPTION A:** You are not an entrepreneur. You are a freelancer with anxiety.
+
+**HOOK OPTION B:** If your business stops making money the second you stop working, you do not own a business.
+
+**SCRIPT:**
+
+You are not an entrepreneur. You are a freelancer with anxiety. And I say that with love. Because I was you. If your income disappears the moment you stop showing up, you do not have a business. You have a job you created for yourself with no benefits and no PTO. The difference between a freelancer and an operator is one word. Systems. A freelancer trades time for money. An operator builds infrastructure that trades other people's time for money and takes a cut of everything that flows through. Same industry. Same skills. Completely different financial outcome. And here is where people get it twisted. They think building systems means working harder. No. It means building once and letting it run. One documented SOP means you never explain that task again. One CRM pipeline means you never manually track a deal again. One comp plan means you never renegotiate with a closer again. You want to know why some people in this space make ten K a month and others make ten K a week doing the same thing? The ten K a week person stopped being the talent three years ago. They own the machine now. That is the only difference.
+
+**CTA OPTION A:** If this hit a nerve, follow. I talk about this every day.
+
+**CTA OPTION B:** Drop a comment if you are still stuck in the freelancer trap. No judgment.
+
+---
+
+## SCRIPT 4 — TIKTOK
+**TOPIC:** High-ticket sales strategy (objection handling)
+**TYPE:** Value
+**TRENDING FORMAT USED:** Problem-Solution
+
+**HOOK OPTION A:** The number one objection killing your close rate is not "I cannot afford it."
+
+**HOOK OPTION B:** Your prospects are not lying when they say they need to think about it. You just did not give them anything to think about.
+
+**SCRIPT:**
+
+The number one objection killing your close rate is not I cannot afford it. It is I need to think about it. And most closers handle it the worst way possible. They push harder. They create urgency that feels fake. They say things like well what is there to think about. And the prospect shuts down. Here is what is actually happening when someone says I need to think about it. They have an unresolved concern they did not voice. That is it. Something in the call did not click and they are too polite to tell you what it is. So instead of pushing, you pull. You say something like I totally get that. Most people I work with felt the same way before they started. Can I ask, is there a specific part you want to think through? And then you shut up. You let the silence do the work. Nine times out of ten, they will tell you the real objection. It might be money. It might be timing. It might be they do not trust the process yet. But now you know what to actually address. Stop fighting the symptom. Start diagnosing the root cause. Your close rate will jump twenty percent just from that one shift.
+
+**CTA OPTION A:** Save this and use it on your next call. Seriously.
+
+**CTA OPTION B:** Follow for more closes that do not feel like arm wrestling.
+
+---
+
+## SCRIPT 5 — TIKTOK
+**TOPIC:** CRM and pipeline systems (pipeline hygiene)
+**TYPE:** Education
+**TRENDING FORMAT USED:** 3 Mistakes List
+
+**HOOK OPTION A:** Three pipeline mistakes that are silently bleeding your sales operation dry.
+
+**HOOK OPTION B:** Your CRM is lying to you and you do not even know it.
+
+**SCRIPT:**
+
+Three pipeline mistakes that are silently bleeding your sales operation dry. Mistake one. You have leads sitting in your pipeline for thirty plus days with no status update. Those are not leads anymore. Those are ghosts. If nobody has touched a lead in two weeks, it is either dead or it needs a re-engagement sequence. Letting them sit there inflates your pipeline value and makes you think you have more revenue coming than you do. Clean them out weekly. Mistake two. You are not tracking lead source. If you cannot tell me which source is producing your best cost-per-close, you are guessing where to spend money. Every single lead that enters your system needs a source tag. Paid ad. Organic. Referral. Webinar. Whatever it is, tag it. Then run the numbers monthly. Mistake three. Your stages mean nothing. If your pipeline stages are something like new lead, contacted, interested, closed, you have a feelings-based pipeline. Your stages need to reflect real actions. Application submitted. Call booked. Call completed. Proposal sent. Contract signed. Every stage transition should be triggered by something that actually happened, not by how a setter felt about the conversation. Fix these three things and I guarantee your forecasting gets fifty percent more accurate inside of thirty days.
+
+**CTA OPTION A:** Save this and audit your CRM this week.
+
+**CTA OPTION B:** Follow if you want a sales operation that actually tells you the truth.
+
+---
+
+## SCRIPT 6 — INSTAGRAM REEL (Trial Reel)
+**TOPIC:** Team building, SOPs, and delegation
+**TYPE:** Value
+**TRENDING FORMAT USED:** Authority Callout
+
+**HOOK OPTION A:** The reason you cannot delegate is not your team. It is you.
+
+**HOOK OPTION B:** You keep saying nobody can do it like you. That is the problem.
+
+**SCRIPT:**
+
+The reason you cannot delegate is not your team. It is you. I know that stings but hear me out. Every coach and operator I work with says the same thing when they start. I have tried hiring. I have tried delegating. Nobody does it as well as me. And they are right. Nobody does it as well as them. Because they never documented how they do it. You cannot hand someone a task with no SOP and then get frustrated when they do it wrong. That is not a team problem. That is a leadership problem. Here is how you actually fix it. Pick the one task you do every single week that takes the most time. Screen record yourself doing it. Top to bottom. Every click, every decision, every shortcut. Then take that recording, turn it into a step-by-step document with screenshots, and hand it to someone with the recording and the document together. Do this once a week for eight weeks. You will have eight SOPs. That is eight tasks off your plate permanently. The person does not need to be a genius. They need a clear system to follow. That is what SOPs do. They turn your expertise into something transferable. And transferable is the only thing that scales. Stop hoarding your process. Start documenting it. That is how you go from doing everything to running everything.
+
+**CTA OPTION A:** Save this and document your first SOP this week.
+
+**CTA OPTION B:** Follow for more on building a team that actually runs without you.
+
+---
+
+## SCRIPT 7 — INSTAGRAM REEL (Trial Reel)
+**TOPIC:** High-ticket sales strategy (offer positioning)
+**TYPE:** Value
+**TRENDING FORMAT USED:** Quiet Flex / Calm Authority
+
+**HOOK OPTION A:** High-ticket offers do not sell because of the price. They sell because of the frame.
+
+**HOOK OPTION B:** You are not charging too much. You are just explaining it wrong.
+
+**SCRIPT:**
+
+High-ticket offers do not sell because of the price. They sell because of the frame. Let me explain what I mean. When a prospect hears five thousand dollars or ten thousand dollars, they are not doing math. They are making a judgment call. Does this feel like it is worth it. And that feeling is a hundred percent determined by how you frame the offer before you ever say the number. Most people frame their offer by listing what is included. You get twelve calls, a Slack channel, a course portal, weekly Q and A. That is a feature list. Nobody pays high ticket for a feature list. They pay for a gap closing. The gap between where they are right now and where they need to be. Your job on a sales call is to make that gap crystal clear. Then position your offer as the bridge. Not the features. The bridge. So instead of saying you get twelve coaching calls, you say in twelve weeks we will have your entire sales backend installed, your first two closers onboarded, and your pipeline producing booked calls daily. Same offer. Completely different frame. One sounds like a course. The other sounds like a business transformation. The offer did not change. The frame did. If you are struggling to close at high ticket, do not lower the price. Sharpen the frame. Make the gap undeniable and the bridge obvious. That is when five and ten K deals start feeling like a no-brainer to the person on the other end.
+
+**CTA OPTION A:** Follow for more on selling high-ticket without pressure tactics.
+
+**CTA OPTION B:** Save this before your next sales call.
+
+---
+
+## SCRIPT 8 — INSTAGRAM REEL (Trial Reel)
+**TOPIC:** AI and automation tools for marketing
+**TYPE:** Education
+**TRENDING FORMAT USED:** Step-by-Step Walkthrough
+
+**HOOK OPTION A:** I use AI to write, repurpose, and schedule a full week of content in ninety minutes. Here is the exact workflow.
+
+**HOOK OPTION B:** This AI content system replaced my content manager. And it costs forty dollars a month.
+
+**SCRIPT:**
+
+I use AI to write, repurpose, and schedule a full week of content in ninety minutes. Here is the exact workflow. Step one. I batch record five to seven raw videos on my phone. Just me talking. No script. I pick a topic and I riff for sixty to ninety seconds. That is my content bank for the week. Step two. I drop each video into Opus Clip. It pulls the best hooks, cuts them into short-form clips, adds captions, and scores each clip on viral potential. I pick the top five. Step three. I take the transcripts from those clips and paste them into Claude. I prompt it to rewrite each one as a LinkedIn post, an email paragraph, and three tweet threads. Same idea, different format, different platform. That is twenty-plus pieces of content from five raw videos. Step four. I load everything into my scheduling tool. I use Publer but Buffer or Later work too. I map it out across TikTok, Instagram, LinkedIn, and X. Monday through Friday, covered. The entire workflow from raw recording to fully scheduled content calendar takes about ninety minutes. And I do it once a week, usually Sunday night. If you are spending five or more hours a week on content and you are not using a system like this, you are working way too hard for the output you are getting. Build the system once. Run it every week. That is leverage.
+
+**CTA OPTION A:** Save this and try it this Sunday.
+
+**CTA OPTION B:** Follow for more systems that give you time back.
+
+---
+
+## SCRIPT 9 — INSTAGRAM REEL (Trial Reel)
+**TOPIC:** Building sales teams (transitioning from closer to operator)
+**TYPE:** Soft Sell
+**TRENDING FORMAT USED:** Transformation / Before-After
+
+**HOOK OPTION A:** I used to close ten calls a week and make eight K a month. Now I do not close any calls and I make more than double that.
+
+**HOOK OPTION B:** Closers get paid per deal. Operators get paid on every deal. Here is how I made the switch.
+
+**SCRIPT:**
+
+I used to close ten calls a week and make eight K a month. Solid income. But here is the problem nobody talks about. I was the entire business. If I got sick, revenue stopped. If I wanted a week off, revenue stopped. If I wanted to scale, I had to physically do more calls. There was a ceiling and I was the ceiling. So I made a shift. Instead of being the closer, I became the operator. I stopped sitting on calls and started building the system behind the calls. I set up the CRM so every lead was tracked from first touch to close. I built comp plans that attracted good closers on commission only. I documented every part of the sales process into SOPs so a new rep could be onboarded in a week instead of a month. I installed call review rhythms and accountability scorecards. And then I plugged closers into the system I built. Now I do not close a single call. But every deal that closes flows through infrastructure I own. I get paid on all of it. Rev share. Retainer. Backend equity. That is the difference between being the talent and being the operator. That is exactly what we built RevStack to teach. How to go from doing the selling to owning the machine that does the selling. Not a course on closing. Not a setter program. A full system for becoming the person who runs the revenue operation and gets paid on every deal it produces. If that sounds like the move you have been trying to figure out, DM me the word operator and I will send you the breakdown.
+
+**CTA OPTION A:** DM me "operator" and I will send you exactly how this works.
+
+**CTA OPTION B:** Link in bio to see the full RevStack breakdown.
+
+---
+
+## SCRIPT 10 — INSTAGRAM REEL (Trial Reel)
+**TOPIC:** CRM and pipeline systems (backend infrastructure)
+**TYPE:** Soft Sell
+**TRENDING FORMAT USED:** Problem-Solution
+
+**HOOK OPTION A:** Most sales teams are leaking money and nobody has built the thing that stops it.
+
+**HOOK OPTION B:** You do not have a sales problem. You have a backend problem.
+
+**SCRIPT:**
+
+Most sales teams are leaking money and nobody has built the thing that stops it. Let me show you what I mean. A lead comes in from an ad. It lands in a spreadsheet or a janky CRM that nobody updates. A setter reaches out, maybe. If the lead books, great. If they do not, nobody follows up. The lead dies. That is not a lead gen problem. That is a backend problem. Now multiply that by fifty leads a month. At a five thousand dollar offer, even a ten percent improvement in your pipeline conversion is an extra twenty-five K a year. But nobody is looking at the backend because everyone is obsessed with getting more leads. More leads into a broken system just means more waste. Here is what an actual backend looks like. Every lead tagged by source and entered into a real CRM. Automatic follow-up sequences for no-shows and ghosted prospects. Setter and closer performance tracked by stage, not by vibes. Weekly pipeline reviews where you look at real conversion data. End-of-month call audits where you review actual recordings and coach the team on what to fix. When you have that, you stop needing more leads. You start closing more of the ones you already have. That is worth more than any ad spend increase. This is the whole premise behind what I teach inside RevStack. We do not teach people to sell harder. We build the infrastructure that captures every dollar the sales team is already generating but the backend is losing. If you are running a sales operation and you know the backend is the weak link, DM me the word backend and I will walk you through what we install.
+
+**CTA OPTION A:** DM me "backend" and I will show you exactly what we build.
+
+**CTA OPTION B:** Link in bio to see how RevStack fixes the backend problem.
+
+---
+
+## Content Mix Summary
+
+| # | Platform | Topic | Type | Format |
+|---|----------|-------|------|--------|
+| 1 | TikTok | Sales team (commission hiring) | Value | Contrarian Take |
+| 2 | TikTok | AI/automation (Zapier, Airtable) | Education | Step-by-Step |
+| 3 | TikTok | Mindset (ownership vs. employment) | Entertainment | Unfiltered Rant |
+| 4 | TikTok | High-ticket sales (objection handling) | Value | Problem-Solution |
+| 5 | TikTok | CRM/pipeline (pipeline hygiene) | Education | 3 Mistakes List |
+| 6 | IG Reel | SOPs and delegation | Value | Authority Callout |
+| 7 | IG Reel | High-ticket (offer positioning) | Value | Quiet Flex |
+| 8 | IG Reel | AI/automation (content system) | Education | Step-by-Step |
+| 9 | IG Reel | Sales team (closer to operator) | Soft Sell | Transformation |
+| 10 | IG Reel | CRM/pipeline (backend infra) | Soft Sell | Problem-Solution |
+
+**Topic count check:** Sales team x2, AI/automation x2, Mindset x1, High-ticket sales x2, CRM/pipeline x2, SOPs x1 — no topic exceeds 2. Confirmed.
+
+**Content mix check:** 8 value/education/entertainment + 2 soft sell. Confirmed.
+
+**Platform split:** 5 TikTok + 5 Instagram Reels. Confirmed.
