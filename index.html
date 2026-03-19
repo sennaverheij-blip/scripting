@@ -3,95 +3,369 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Senna's Script Engine</title>
+  <title>Content Agent</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
   <header>
     <div class="header-inner">
       <div class="brand">
-        <h1>Script Engine</h1>
-        <span class="badge">March 18, 2026</span>
+        <span class="brand-mark">◈</span>
+        <h1>Content Agent</h1>
       </div>
-      <div class="stats" id="stats"></div>
+      <nav class="main-nav">
+        <button class="nav-btn active" data-view="clients">Clients</button>
+        <button class="nav-btn" data-view="generate">Generate</button>
+        <button class="nav-btn" data-view="library">Library</button>
+        <button class="nav-btn nav-settings" data-view="settings">⚙</button>
+      </nav>
     </div>
   </header>
 
-  <main>
-    <!-- Research Panel -->
-    <section class="research-panel" id="researchPanel">
-      <button class="research-toggle" id="researchToggle">
-        <span class="research-toggle-icon">&#9662;</span>
-        Research Summary
-      </button>
-      <div class="research-content" id="researchContent">
-        <div class="research-grid">
-          <div class="research-card">
-            <h3>Trending Formats</h3>
-            <ul>
-              <li><strong>Problem-Solution</strong> — pain hook → immediate fix</li>
-              <li><strong>Contrarian/Hot Takes</strong> — polarizing openers for comment distribution</li>
-              <li><strong>Lo-Fi Unfiltered Rants</strong> — raw voiceover, authenticity over polish</li>
-              <li><strong>Step-by-Step Walkthroughs</strong> — structured, actionable guidance</li>
-              <li><strong>Quiet Flex Authority</strong> — calm, confident, intentional energy</li>
-              <li><strong>Transformation/Before-After</strong> — client wins, system reveals</li>
-              <li><strong>Authority Callouts</strong> — "what nobody tells you" framing</li>
-              <li><strong>3 Mistakes Lists</strong> — numbered pain points driving saves</li>
-            </ul>
+  <!-- Setup screen shown when no API key exists -->
+  <div id="setup-screen" class="setup-screen hidden">
+    <div class="setup-card">
+      <div class="setup-mark">◈</div>
+      <h2>Welcome to Content Agent</h2>
+      <p>Add your Anthropic API key to get started. It's stored locally in your browser and sent only to Anthropic's API.</p>
+      <div class="form-group">
+        <label>Anthropic API Key</label>
+        <div class="key-input-wrap">
+          <input type="password" id="setup-api-key" class="form-input" placeholder="sk-ant-api03-...">
+          <button class="key-toggle-btn" id="setup-toggle-key">Show</button>
+        </div>
+      </div>
+      <button class="btn-primary full-width" id="setup-save-btn">Save Key &amp; Continue</button>
+      <p class="setup-hint">Get your key at <strong>console.anthropic.com</strong></p>
+    </div>
+  </div>
+
+  <main id="app-main">
+
+    <!-- ═══════════════════ CLIENTS VIEW ═══════════════════ -->
+    <div id="view-clients" class="view active">
+      <div class="view-header">
+        <div>
+          <h2>Clients</h2>
+          <p class="view-subtitle">Manage client profiles and their documents</p>
+        </div>
+        <button class="btn-primary" id="new-client-btn">+ New Client</button>
+      </div>
+
+      <div id="clients-grid" class="clients-grid"></div>
+
+      <div id="clients-empty" class="empty-state hidden">
+        <div class="empty-icon">👤</div>
+        <h3>No clients yet</h3>
+        <p>Create your first client profile to start generating content</p>
+        <button class="btn-primary" id="new-client-empty-btn">+ Create First Client</button>
+      </div>
+    </div>
+
+    <!-- CLIENT FORM OVERLAY -->
+    <div id="client-form-overlay" class="form-overlay hidden">
+      <div class="form-panel">
+        <div class="form-panel-header">
+          <h3 id="form-panel-title">New Client</h3>
+          <button class="close-icon-btn" id="close-form-btn">&times;</button>
+        </div>
+
+        <div class="form-panel-body">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Client Name <span class="required">*</span></label>
+              <input type="text" id="f-name" class="form-input" placeholder="e.g. Senna Verheij">
+            </div>
+            <div class="form-group">
+              <label>Niche <span class="required">*</span></label>
+              <input type="text" id="f-niche" class="form-input" placeholder="e.g. Business coaching for online coaches">
+            </div>
           </div>
-          <div class="research-card">
-            <h3>TikTok Insights</h3>
-            <ul>
-              <li>Hook must land in the first word</li>
-              <li>Lo-fi/unpolished outperforms studio quality</li>
-              <li>Completion rate is the #1 ranking signal</li>
-              <li>60+ second content with sustained retention now favored</li>
-              <li>Comment-driving content gets algorithmic boost</li>
-            </ul>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Platforms</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="f-tiktok" checked>
+                  <span class="checkbox-custom"></span>
+                  TikTok
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="f-instagram" checked>
+                  <span class="checkbox-custom"></span>
+                  Instagram Reels
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Scripts per week</label>
+              <select id="f-count" class="form-input form-select">
+                <option value="6">6 scripts / week</option>
+                <option value="8" selected>8 scripts / week</option>
+                <option value="10">10 scripts / week</option>
+                <option value="12">12 scripts / week</option>
+              </select>
+            </div>
           </div>
-          <div class="research-card">
-            <h3>Instagram Reels / Trial Reels</h3>
-            <ul>
-              <li>Original audio gets algorithmic preference</li>
-              <li>Trial Reels should NOT be shared to grid after performing</li>
-              <li>DM automation pairing is the lead-gen power move</li>
-              <li>Voiceovers preferred over text overlays</li>
-              <li>3-5 hashtags max; watch time > vanity metrics</li>
-            </ul>
+
+          <div class="form-group">
+            <label>
+              ICP Document
+              <span class="label-hint">Who is the ideal client? Demographics, pains, goals, language they use.</span>
+            </label>
+            <div class="doc-area">
+              <textarea id="f-icp" class="form-textarea" rows="6"
+                placeholder="Paste your ICP document here...&#10;&#10;Example: Our ideal client is a coach doing $5k-$15k/month who wants to break through to consistent $30k months. They struggle with inconsistent lead flow, no sales team, and doing everything themselves..."></textarea>
+              <div class="doc-actions">
+                <button class="upload-btn" data-target="f-icp">Upload .txt / .md</button>
+                <input type="file" class="file-upload-input" data-for="f-icp" accept=".txt,.md">
+                <span class="doc-char-count" id="icp-count"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              Offer Document
+              <span class="label-hint">What do you sell? Transformation, price, proof points, objections.</span>
+            </label>
+            <div class="doc-area">
+              <textarea id="f-offer" class="form-textarea" rows="6"
+                placeholder="Paste your offer document here...&#10;&#10;Example: RevStack is a 12-week high-ticket group program at $8,500 that helps coaches build a fully systemised sales operation..."></textarea>
+              <div class="doc-actions">
+                <button class="upload-btn" data-target="f-offer">Upload .txt / .md</button>
+                <input type="file" class="file-upload-input" data-for="f-offer" accept=".txt,.md">
+                <span class="doc-char-count" id="offer-count"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              Tone of Voice Document
+              <span class="label-hint">How do you communicate? Personality, vocabulary, what to avoid.</span>
+            </label>
+            <div class="doc-area">
+              <textarea id="f-tone" class="form-textarea" rows="6"
+                placeholder="Paste your tone of voice guide here...&#10;&#10;Example: Direct, no-fluff, speaks to operators not beginners. Confident but not arrogant. Never uses buzzwords like 'game-changer' or 'crush it'..."></textarea>
+              <div class="doc-actions">
+                <button class="upload-btn" data-target="f-tone">Upload .txt / .md</button>
+                <input type="file" class="file-upload-input" data-for="f-tone" accept=".txt,.md">
+                <span class="doc-char-count" id="tone-count"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-panel-footer">
+          <button class="btn-danger hidden" id="delete-client-btn">Delete Client</button>
+          <div class="footer-right">
+            <button class="btn-ghost" id="cancel-form-btn">Cancel</button>
+            <button class="btn-primary" id="save-client-btn">Save Client</button>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Filters -->
-    <section class="filters">
-      <div class="filter-group">
-        <button class="filter-btn active" data-filter="all" data-group="platform">All</button>
-        <button class="filter-btn" data-filter="tiktok" data-group="platform">TikTok</button>
-        <button class="filter-btn" data-filter="instagram" data-group="platform">Reels</button>
-      </div>
-      <div class="filter-group">
-        <button class="filter-btn active" data-filter="all" data-group="type">All Types</button>
-        <button class="filter-btn" data-filter="value" data-group="type">Value</button>
-        <button class="filter-btn" data-filter="education" data-group="type">Education</button>
-        <button class="filter-btn" data-filter="entertainment" data-group="type">Entertainment</button>
-        <button class="filter-btn" data-filter="soft sell" data-group="type">Soft Sell</button>
-      </div>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search scripts...">
-      </div>
-    </section>
-
-    <!-- Content Mix Bar -->
-    <section class="mix-bar" id="mixBar"></section>
-
-    <!-- Scripts Grid -->
-    <section class="scripts-grid" id="scriptsGrid"></section>
-
-    <!-- Empty State -->
-    <div class="empty-state" id="emptyState" style="display:none;">
-      <p>No scripts match your filters.</p>
     </div>
+
+    <!-- ═══════════════════ GENERATE VIEW ═══════════════════ -->
+    <div id="view-generate" class="view">
+      <div class="view-header">
+        <div>
+          <h2>Generate Content</h2>
+          <p class="view-subtitle">Research live trends and generate this week's scripts for a client</p>
+        </div>
+      </div>
+
+      <div class="generate-layout">
+
+        <!-- Step 1: Pick client -->
+        <div class="gen-card" id="gen-step-client">
+          <div class="gen-step-label">Step 1 — Select Client</div>
+          <div id="gen-client-grid" class="gen-client-grid"></div>
+          <div id="gen-no-clients" class="gen-no-clients hidden">
+            <p>No clients yet. <a href="#" id="gen-go-create">Create a client first.</a></p>
+          </div>
+        </div>
+
+        <!-- Step 2: Configure -->
+        <div class="gen-card hidden" id="gen-step-config">
+          <div class="gen-step-label">Step 2 — Configure</div>
+          <div class="selected-client-bar" id="gen-selected-bar"></div>
+          <div class="gen-config-row">
+            <div class="form-group">
+              <label>Week label</label>
+              <input type="text" id="gen-week" class="form-input" placeholder="e.g. March 18, 2026">
+            </div>
+            <div class="form-group">
+              <label>Scripts to generate</label>
+              <select id="gen-count" class="form-input form-select">
+                <option value="6">6 scripts</option>
+                <option value="8" selected>8 scripts</option>
+                <option value="10">10 scripts</option>
+                <option value="12">12 scripts</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button class="btn-generate" id="generate-btn">
+                <span class="gen-btn-icon">◎</span>
+                Research &amp; Generate
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="gen-card hidden" id="gen-progress">
+          <div class="progress-wrap">
+            <div class="spinner"></div>
+            <div class="progress-text">
+              <div class="progress-status" id="progress-status">Starting...</div>
+              <div class="progress-sub">This takes 30–60 seconds</div>
+            </div>
+          </div>
+          <div class="progress-steps">
+            <div class="prog-step pending" id="prog-research">
+              <div class="prog-dot"></div>
+              <span>Research niche trends</span>
+            </div>
+            <div class="prog-step pending" id="prog-generate">
+              <div class="prog-dot"></div>
+              <span>Generate scripts</span>
+            </div>
+            <div class="prog-step pending" id="prog-save">
+              <div class="prog-dot"></div>
+              <span>Save to library</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Research Summary (shown after research phase) -->
+        <div class="gen-card hidden" id="gen-research-panel">
+          <div class="research-panel-header">
+            <h3>Research Summary</h3>
+            <button class="collapse-btn" id="collapse-research">Hide</button>
+          </div>
+          <div id="research-output" class="research-output"></div>
+        </div>
+
+        <!-- Success -->
+        <div class="gen-card success-card hidden" id="gen-success">
+          <div class="success-checkmark">✓</div>
+          <h3>Content Generated!</h3>
+          <p id="gen-success-msg">8 scripts saved to your library.</p>
+          <div class="success-actions">
+            <button class="btn-primary" id="go-library-btn">View in Library</button>
+            <button class="btn-ghost" id="gen-again-btn">Generate Again</button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="gen-card error-card hidden" id="gen-error">
+          <div class="error-mark">⚠</div>
+          <h3>Generation Failed</h3>
+          <p id="gen-error-msg">Something went wrong. Please try again.</p>
+          <button class="btn-ghost" id="gen-retry-btn">Retry</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════ LIBRARY VIEW ═══════════════════ -->
+    <div id="view-library" class="view">
+      <div class="view-header">
+        <div>
+          <h2>Script Library</h2>
+          <p class="view-subtitle">Browse, filter and copy your generated scripts</p>
+        </div>
+        <div id="lib-stats" class="stats"></div>
+      </div>
+
+      <!-- Filters -->
+      <section class="filters">
+        <div class="filter-group" id="persona-filter-group">
+          <!-- Persona filters populated by JS -->
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all" data-group="platform">All</button>
+          <button class="filter-btn" data-filter="tiktok" data-group="platform">TikTok</button>
+          <button class="filter-btn" data-filter="instagram" data-group="platform">Reels</button>
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all" data-group="type">All Types</button>
+          <button class="filter-btn" data-filter="value" data-group="type">Value</button>
+          <button class="filter-btn" data-filter="education" data-group="type">Education</button>
+          <button class="filter-btn" data-filter="entertainment" data-group="type">Entertainment</button>
+          <button class="filter-btn" data-filter="soft sell" data-group="type">Soft Sell</button>
+        </div>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search scripts...">
+        </div>
+      </section>
+
+      <section class="mix-bar" id="mixBar"></section>
+      <section class="scripts-grid" id="scriptsGrid"></section>
+
+      <div class="empty-state hidden" id="lib-empty">
+        <div class="empty-icon">📝</div>
+        <h3>No scripts yet</h3>
+        <p>Generate content for a client to populate your library</p>
+        <button class="btn-primary" id="lib-go-generate">Generate Content</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ SETTINGS VIEW ═══════════════════ -->
+    <div id="view-settings" class="view">
+      <div class="view-header">
+        <div>
+          <h2>Settings</h2>
+          <p class="view-subtitle">API key and preferences</p>
+        </div>
+      </div>
+
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>Anthropic API Key</h3>
+          <p class="settings-desc">Stored locally in your browser. Only sent to Anthropic's API.</p>
+          <div class="key-input-wrap">
+            <input type="password" id="settings-api-key" class="form-input" placeholder="sk-ant-api03-...">
+            <button class="key-toggle-btn" id="settings-toggle-key">Show</button>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="save-key-btn">Save Key</button>
+            <span id="key-saved-msg" class="key-saved-msg hidden">Saved!</span>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>About</h3>
+          <p class="settings-desc">AI-powered content agent for short-form video scripts.</p>
+          <div class="info-table">
+            <div class="info-row">
+              <span>Model</span>
+              <span>claude-sonnet-4-6</span>
+            </div>
+            <div class="info-row">
+              <span>Storage</span>
+              <span>Browser (localStorage)</span>
+            </div>
+            <div class="info-row">
+              <span>Platforms</span>
+              <span>TikTok &amp; Instagram Reels</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card danger-card">
+          <h3>Danger Zone</h3>
+          <p class="settings-desc">Permanently delete all clients and scripts from this browser.</p>
+          <button class="btn-danger" id="clear-data-btn">Clear All Data</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Script Modal -->
@@ -102,7 +376,8 @@
     </div>
   </div>
 
-  <script src="scripts.js"></script>
+  <script src="personas.js"></script>
+  <script src="agent.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
