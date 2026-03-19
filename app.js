@@ -666,19 +666,34 @@ function renderLibrary() {
 function renderGridView(filtered, personas) {
   const grid = $('scriptsGrid');
   grid.className = 'scripts-grid';
-  grid.innerHTML = filtered.map((s, idx) => scriptCardHtml(s, idx, personas)).join('');
+  const allMetrics = loadAllMetrics();
+  grid.innerHTML = filtered.map((s, idx) => scriptCardHtml(s, idx, personas, allMetrics)).join('');
   bindCardEvents(grid, filtered);
 }
 
-function scriptCardHtml(s, idx, personas) {
+function scriptCardHtml(s, idx, personas, allMetrics) {
   const platformCls = s.platform;
   const typeCls     = s.type.toLowerCase().replace(' ', '-');
   const wordCount   = s.script ? s.script.split(/\s+/).length : 0;
-  // 3 words/sec = energetic TikTok pace → target 37-47 sec
   const duration    = Math.round(wordCount / 3);
   const preview     = s.script ? s.script.substring(0, 150) + '...' : '';
   const personaName = personas.find(p => p.id === s.personaId)?.name || '';
   const dayLabel    = s.day ? `<span class="client-meta-tag" style="font-size:0.65rem">${s.day} · #${s.slot}</span>` : '';
+  const metrics     = s.id ? (allMetrics || {})[s.id] : null;
+
+  // Format icons for content types available
+  const hasOutline   = Array.isArray(s.outline) && s.outline.length;
+  const hasCarousel  = s.carousel?.slides?.length;
+  const hasScreenTxt = Array.isArray(s.screenText) && s.screenText.length;
+  const formatIcons  = [
+    hasOutline   && '<span class="content-icon" title="Outline">≡</span>',
+    hasScreenTxt && '<span class="content-icon" title="On-Screen Text">T</span>',
+    hasCarousel  && '<span class="content-icon" title="Carousel">⧉</span>',
+  ].filter(Boolean).join('');
+
+  const metricsTag = metrics
+    ? `<span class="metrics-pill">${metrics.views ? formatViews(metrics.views) + ' views' : '📊 Tracked'}</span>`
+    : '';
 
   return `
     <div class="script-card" data-idx="${idx}">
@@ -693,12 +708,12 @@ function scriptCardHtml(s, idx, personas) {
       </div>
       <div class="card-body">
         <div class="card-topic">${esc(s.topic || '')}</div>
-        <div class="card-format">${esc(s.format || '')}</div>
+        <div class="card-format">${esc(s.format || '')} ${formatIcons}</div>
         <div class="card-hook">"${esc(s.hookA || '')}"</div>
         <div class="card-preview">${esc(preview)}</div>
       </div>
       <div class="card-footer">
-        <span class="word-count">${wordCount} words · ~${duration}s</span>
+        <span class="word-count">${wordCount}w · ~${duration}s ${metricsTag}</span>
         <div class="card-actions">
           <button class="action-btn copy-hook-btn"
             data-hook="${escAttr(s.hookA || '')}"
@@ -710,6 +725,14 @@ function scriptCardHtml(s, idx, personas) {
       </div>
     </div>
   `;
+}
+
+function formatViews(n) {
+  if (!n || isNaN(n)) return '';
+  n = Number(n);
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
+  return String(n);
 }
 
 function bindCardEvents(container, scripts) {
@@ -727,6 +750,7 @@ function bindCardEvents(container, scripts) {
 // ─── WEEK VIEW ─────────────────────────────────────────────────────────────────
 function renderWeekView(filtered, personas) {
   const grid = $('scriptsGrid');
+  const allMetrics = loadAllMetrics();
   grid.className = 'week-view-grid';
 
   // Find all unique days in the scripts
@@ -790,9 +814,13 @@ function renderWeekView(filtered, personas) {
           const wordCount = s.script ? s.script.split(/\s+/).length : 0;
           const duration  = Math.round(wordCount / 3);
           const typeCls   = s.type.toLowerCase().replace(' ', '-');
+          const hasM      = s.id && allMetrics[s.id];
           html += `
             <div class="week-script-cell script-card" data-idx="${scriptIdx}">
-              <div class="week-cell-type"><span class="type-badge ${typeCls}">${s.type}</span></div>
+              <div class="week-cell-type">
+                <span class="type-badge ${typeCls}">${s.type}</span>
+                ${hasM ? `<span class="metrics-pill" style="margin-left:4px">📊</span>` : ''}
+              </div>
               <div class="week-cell-format">${esc(s.format || '')}</div>
               <div class="week-cell-hook">"${esc(s.hookA || '')}"</div>
               <div class="week-cell-meta">${wordCount}w · ~${duration}s</div>
@@ -859,74 +887,311 @@ function openScriptModal(script) {
   const platformCls = script.platform;
   const typeCls     = script.type.toLowerCase().replace(' ', '-');
   const wordCount   = script.script ? script.script.split(/\s+/).length : 0;
-  const duration    = Math.round(wordCount / 3); // 3 words/sec energetic pace
+  const duration    = Math.round(wordCount / 3);
+  const existingMetrics = script.id ? loadMetrics(script.id) : null;
 
-  $('modalBody').innerHTML = `
-    <div class="modal-meta">
-      <span class="platform-badge ${platformCls}">
-        ${script.platform === 'tiktok' ? 'TikTok' : 'Instagram Reel'}
-      </span>
-      <span class="type-badge ${typeCls}">${script.type}</span>
-      <span class="mix-tag" style="color:var(--text-muted);border-color:var(--border);background:var(--surface-2)">
-        ${wordCount} words · ~${duration}s
-      </span>
+  const hasOutline   = Array.isArray(script.outline) && script.outline.length;
+  const hasScreenTxt = Array.isArray(script.screenText) && script.screenText.length;
+  const hasCarousel  = script.carousel?.slides?.length;
+
+  // ── Build tab list ──────────────────────────────────────────────────────────
+  const tabs = [
+    { id: 'script',   label: 'Script' },
+    { id: 'outline',  label: 'Outline',   hidden: !hasOutline },
+    { id: 'screen',   label: 'On-Screen', hidden: !hasScreenTxt },
+    { id: 'carousel', label: 'Carousel',  hidden: !hasCarousel },
+    { id: 'metrics',  label: existingMetrics ? '📊 Metrics' : 'Add Metrics' },
+  ].filter(t => !t.hidden);
+
+  // ── Carousel HTML ───────────────────────────────────────────────────────────
+  const carouselHtml = hasCarousel ? `
+    <div class="carousel-cover">
+      <div class="carousel-cover-label">Cover Slide</div>
+      <div class="carousel-cover-text">${esc(script.carousel.cover || '')}</div>
+      <button class="modal-btn copy-inline" data-copy="${escAttr(script.carousel.cover || '')}">Copy</button>
     </div>
-    <div class="modal-topic">${esc(script.topic || '')}</div>
-    <div class="modal-format">Format: ${esc(script.format || '')}</div>
-
-    <div class="modal-section">
-      <div class="modal-section-title">Hooks</div>
-      <div class="hook-option">
-        <div class="hook-label">Hook A</div>
-        ${esc(script.hookA || '')}
-      </div>
-      <div class="hook-option">
-        <div class="hook-label">Hook B</div>
-        ${esc(script.hookB || '')}
-      </div>
+    <div class="carousel-slides">
+      ${script.carousel.slides.map((sl, i) => `
+        <div class="carousel-slide">
+          <div class="slide-number">Slide ${i + 2}</div>
+          <div class="slide-headline">${esc(sl.headline || '')}</div>
+          <div class="slide-body">${esc(sl.body || '')}</div>
+          <button class="modal-btn copy-inline" data-copy="${escAttr((sl.headline || '') + '\n\n' + (sl.body || ''))}">Copy slide</button>
+        </div>
+      `).join('')}
     </div>
-
-    <div class="modal-section">
-      <div class="modal-section-title">Full Script</div>
-      <div class="modal-script">${esc(script.script || '')}</div>
+    <div class="carousel-cta-slide">
+      <div class="carousel-cover-label">CTA Slide</div>
+      <div class="carousel-cover-text">${esc(script.carousel.cta || '')}</div>
+      <button class="modal-btn copy-inline" data-copy="${escAttr(script.carousel.cta || '')}">Copy</button>
     </div>
-
-    <div class="modal-section">
-      <div class="modal-section-title">Calls to Action</div>
-      <div class="cta-option">
-        <div class="cta-label">CTA A</div>
-        ${esc(script.ctaA || '')}
-      </div>
-      <div class="cta-option">
-        <div class="cta-label">CTA B</div>
-        ${esc(script.ctaB || '')}
-      </div>
-    </div>
-
     <div class="modal-actions">
-      <button class="modal-btn primary" id="modal-copy-all">Copy Full Script</button>
-      <button class="modal-btn" id="modal-copy-hook">Copy Hook A</button>
-      <button class="modal-btn" id="modal-copy-hookb">Copy Hook B</button>
-      <button class="modal-btn" id="modal-copy-cta">Copy CTA A</button>
+      <button class="modal-btn primary" id="copy-carousel-all">Copy All Carousel Copy</button>
+    </div>
+  ` : '<p class="empty-tab">No carousel copy — regenerate this client\'s content to get carousel slides.</p>';
+
+  // ── Outline HTML ────────────────────────────────────────────────────────────
+  const outlineHtml = hasOutline ? `
+    <div class="outline-list">
+      ${script.outline.map((pt, i) => `
+        <div class="outline-item">
+          <span class="outline-num">${i + 1}</span>
+          <span class="outline-text">${esc(pt)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn primary" id="copy-outline">Copy Outline</button>
+    </div>
+  ` : '<p class="empty-tab">No outline — regenerate this client\'s content to get bullet outlines.</p>';
+
+  // ── On-Screen Text HTML ─────────────────────────────────────────────────────
+  const screenHtml = hasScreenTxt ? `
+    <p class="tab-desc">Text overlays to display during the video. Use these as captions or bold text that appears on screen.</p>
+    <div class="screen-text-list">
+      ${script.screenText.map((line, i) => `
+        <div class="screen-text-item">
+          <div class="screen-text-line">${esc(line)}</div>
+          <button class="modal-btn copy-inline" data-copy="${escAttr(line)}">Copy</button>
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn primary" id="copy-screen-all">Copy All Screen Text</button>
+    </div>
+  ` : '<p class="empty-tab">No on-screen text — regenerate this client\'s content to get text overlays.</p>';
+
+  // ── Metrics HTML ─────────────────────────────────────────────────────────────
+  const m = existingMetrics || {};
+  const metricsHtml = `
+    ${existingMetrics ? renderMetricsDisplay(existingMetrics, script.platform) : ''}
+    <div class="metrics-form">
+      <div class="metrics-form-title">${existingMetrics ? 'Update Metrics' : 'Log Post Performance'}</div>
+      <p class="tab-desc">Track how this script performs when posted. Helps identify what content to double down on.</p>
+      <div class="metrics-inputs">
+        <div class="metric-input-row">
+          <label>Views</label>
+          <input type="number" id="m-views" class="form-input metric-inp" placeholder="0" value="${m.views || ''}">
+        </div>
+        <div class="metric-input-row">
+          <label>Likes</label>
+          <input type="number" id="m-likes" class="form-input metric-inp" placeholder="0" value="${m.likes || ''}">
+        </div>
+        <div class="metric-input-row">
+          <label>Comments</label>
+          <input type="number" id="m-comments" class="form-input metric-inp" placeholder="0" value="${m.comments || ''}">
+        </div>
+        <div class="metric-input-row">
+          <label>Shares</label>
+          <input type="number" id="m-shares" class="form-input metric-inp" placeholder="0" value="${m.shares || ''}">
+        </div>
+        <div class="metric-input-row">
+          <label>Saves</label>
+          <input type="number" id="m-saves" class="form-input metric-inp" placeholder="0" value="${m.saves || ''}">
+        </div>
+        <div class="metric-input-row">
+          <label>Retention %</label>
+          <input type="number" id="m-retention" class="form-input metric-inp" placeholder="0–100" min="0" max="100" value="${m.retention || ''}">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Notes</label>
+        <textarea id="m-notes" class="form-textarea" rows="2" placeholder="e.g. Went viral on day 2, hook B performed better...">${m.notes || ''}</textarea>
+      </div>
+      <div class="metrics-form-actions">
+        <button class="btn-primary" id="save-metrics-btn">Save Metrics</button>
+        ${existingMetrics ? `<button class="btn-danger" id="delete-metrics-btn">Remove</button>` : ''}
+      </div>
     </div>
   `;
 
-  $('modal-copy-all').addEventListener('click', function () {
-    const full = `${script.hookA}\n\n${script.script}\n\n${script.ctaA}`;
-    copyModalBtn(this, full);
+  // ── Assemble modal ──────────────────────────────────────────────────────────
+  $('modalBody').innerHTML = `
+    <div class="modal-header-block">
+      <div class="modal-meta">
+        <span class="platform-badge ${platformCls}">
+          ${script.platform === 'tiktok' ? 'TikTok' : 'Instagram Reel'}
+        </span>
+        <span class="type-badge ${typeCls}">${script.type}</span>
+        <span class="mix-tag" style="color:var(--text-muted);border-color:var(--border);background:var(--surface-2)">
+          ${wordCount} words · ~${duration}s
+        </span>
+        ${existingMetrics ? `<span class="metrics-pill">📊 ${existingMetrics.views ? formatViews(existingMetrics.views) + ' views' : 'Tracked'}</span>` : ''}
+      </div>
+      <div class="modal-topic">${esc(script.topic || '')}</div>
+      <div class="modal-format">Format: ${esc(script.format || '')}</div>
+    </div>
+
+    <div class="modal-tabs">
+      ${tabs.map((t, i) => `
+        <button class="modal-tab ${i === 0 ? 'active' : ''}" data-tab="${t.id}">${t.label}</button>
+      `).join('')}
+    </div>
+
+    <div class="tab-panel active" id="panel-script">
+      <div class="modal-section">
+        <div class="modal-section-title">Hooks</div>
+        <div class="hook-option">
+          <div class="hook-label">Hook A</div>
+          ${esc(script.hookA || '')}
+        </div>
+        <div class="hook-option">
+          <div class="hook-label">Hook B</div>
+          ${esc(script.hookB || '')}
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Full Script</div>
+        <div class="modal-script">${esc(script.script || '')}</div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Calls to Action</div>
+        <div class="cta-option">
+          <div class="cta-label">CTA A</div>
+          ${esc(script.ctaA || '')}
+        </div>
+        <div class="cta-option">
+          <div class="cta-label">CTA B</div>
+          ${esc(script.ctaB || '')}
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn primary" id="modal-copy-all">Copy Full Script</button>
+        <button class="modal-btn" id="modal-copy-hook">Copy Hook A</button>
+        <button class="modal-btn" id="modal-copy-hookb">Copy Hook B</button>
+        <button class="modal-btn" id="modal-copy-cta">Copy CTA A</button>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-outline">${outlineHtml}</div>
+    <div class="tab-panel" id="panel-screen">${screenHtml}</div>
+    <div class="tab-panel" id="panel-carousel">${carouselHtml}</div>
+    <div class="tab-panel" id="panel-metrics">${metricsHtml}</div>
+  `;
+
+  // ── Tab switching ───────────────────────────────────────────────────────────
+  $('modalBody').querySelectorAll('.modal-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $('modalBody').querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
+      $('modalBody').querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById('panel-' + btn.dataset.tab);
+      if (panel) panel.classList.add('active');
+    });
   });
-  $('modal-copy-hook').addEventListener('click', function () {
-    copyModalBtn(this, script.hookA);
+
+  // ── Script tab actions ──────────────────────────────────────────────────────
+  $('modal-copy-all')?.addEventListener('click', function () {
+    copyModalBtn(this, `${script.hookA}\n\n${script.script}\n\n${script.ctaA}`);
   });
-  $('modal-copy-hookb').addEventListener('click', function () {
-    copyModalBtn(this, script.hookB);
+  $('modal-copy-hook')?.addEventListener('click', function () { copyModalBtn(this, script.hookA); });
+  $('modal-copy-hookb')?.addEventListener('click', function () { copyModalBtn(this, script.hookB); });
+  $('modal-copy-cta')?.addEventListener('click', function () { copyModalBtn(this, script.ctaA); });
+
+  // ── Outline copy ─────────────────────────────────────────────────────────────
+  $('copy-outline')?.addEventListener('click', function () {
+    const text = (script.outline || []).map((p, i) => `${i + 1}. ${p}`).join('\n');
+    copyModalBtn(this, text);
   });
-  $('modal-copy-cta').addEventListener('click', function () {
-    copyModalBtn(this, script.ctaA);
+
+  // ── Screen text copy ─────────────────────────────────────────────────────────
+  $('copy-screen-all')?.addEventListener('click', function () {
+    copyModalBtn(this, (script.screenText || []).join('\n'));
+  });
+
+  // ── Carousel copy ─────────────────────────────────────────────────────────────
+  $('copy-carousel-all')?.addEventListener('click', function () {
+    if (!script.carousel) return;
+    const { cover, slides, cta } = script.carousel;
+    const lines = [
+      `COVER: ${cover}`,
+      '',
+      ...(slides || []).map((sl, i) => `SLIDE ${i + 2}:\n${sl.headline}\n${sl.body}`),
+      '',
+      `CTA: ${cta}`,
+    ];
+    copyModalBtn(this, lines.join('\n'));
+  });
+
+  // Inline copy buttons (carousel/screen text)
+  $('modalBody').querySelectorAll('.copy-inline').forEach(btn => {
+    btn.addEventListener('click', function () { copyModalBtn(this, this.dataset.copy); });
+  });
+
+  // ── Metrics save / delete ────────────────────────────────────────────────────
+  $('save-metrics-btn')?.addEventListener('click', function () {
+    if (!script.id) return;
+    const metrics = {
+      views:     parseMetricInput('m-views'),
+      likes:     parseMetricInput('m-likes'),
+      comments:  parseMetricInput('m-comments'),
+      shares:    parseMetricInput('m-shares'),
+      saves:     parseMetricInput('m-saves'),
+      retention: parseMetricInput('m-retention'),
+      notes:     ($('m-notes')?.value || '').trim(),
+    };
+    saveMetrics(script.id, metrics);
+    const orig = this.textContent;
+    this.textContent = 'Saved!';
+    setTimeout(() => { this.textContent = orig; }, 1500);
+    renderLibrary(); // refresh card badges
+  });
+
+  $('delete-metrics-btn')?.addEventListener('click', function () {
+    if (!script.id) return;
+    deleteMetrics(script.id);
+    renderLibrary();
+    closeModal();
   });
 
   $('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+// ── Metrics display helper ────────────────────────────────────────────────────
+function renderMetricsDisplay(m, platform) {
+  const views     = Number(m.views) || 0;
+  const likes     = Number(m.likes) || 0;
+  const comments  = Number(m.comments) || 0;
+  const shares    = Number(m.shares) || 0;
+  const saves     = Number(m.saves) || 0;
+  const retention = Number(m.retention) || 0;
+
+  const engagements = likes + comments + shares + saves;
+  const er = views > 0 ? ((engagements / views) * 100).toFixed(1) : null;
+
+  // Platform benchmarks
+  const retentionBench = platform === 'instagram' ? 50 : 45;
+  const erBench        = platform === 'instagram' ? 2  : 3;
+
+  function perf(val, good, unit = '') {
+    if (!val) return '';
+    const cls = val >= good ? 'metric-good' : val >= good * 0.6 ? 'metric-ok' : 'metric-low';
+    return `<span class="${cls}">${val}${unit}</span>`;
+  }
+
+  return `
+    <div class="metrics-display">
+      <div class="metrics-display-title">Performance</div>
+      <div class="metrics-stats-grid">
+        ${views    ? `<div class="metric-stat"><div class="metric-stat-val">${formatViews(views)}</div><div class="metric-stat-label">Views</div></div>` : ''}
+        ${likes    ? `<div class="metric-stat"><div class="metric-stat-val">${formatViews(likes)}</div><div class="metric-stat-label">Likes</div></div>` : ''}
+        ${comments ? `<div class="metric-stat"><div class="metric-stat-val">${formatViews(comments)}</div><div class="metric-stat-label">Comments</div></div>` : ''}
+        ${shares   ? `<div class="metric-stat"><div class="metric-stat-val">${formatViews(shares)}</div><div class="metric-stat-label">Shares</div></div>` : ''}
+        ${saves    ? `<div class="metric-stat"><div class="metric-stat-val">${formatViews(saves)}</div><div class="metric-stat-label">Saves</div></div>` : ''}
+        ${er       ? `<div class="metric-stat"><div class="metric-stat-val">${perf(parseFloat(er), erBench, '%')}</div><div class="metric-stat-label">Eng. Rate</div></div>` : ''}
+        ${retention ? `<div class="metric-stat"><div class="metric-stat-val">${perf(retention, retentionBench, '%')}</div><div class="metric-stat-label">Retention</div></div>` : ''}
+      </div>
+      ${m.notes ? `<div class="metrics-notes">${esc(m.notes)}</div>` : ''}
+    </div>
+  `;
+}
+
+function parseMetricInput(id) {
+  const el = $(id);
+  if (!el || el.value === '') return null;
+  const n = Number(el.value);
+  return isNaN(n) ? null : n;
 }
 
 function closeModal() {

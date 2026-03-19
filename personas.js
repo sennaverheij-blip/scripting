@@ -6,6 +6,7 @@
 const PERSONAS_KEY  = 'ca_personas';
 const SCRIPTS_KEY   = 'ca_scripts';
 const SETTINGS_KEY  = 'ca_settings';
+const METRICS_KEY   = 'ca_metrics';
 
 // ─── ID GENERATION ────────────────────────────────────────────────────────────
 function generateId() {
@@ -102,8 +103,38 @@ function saveScriptsForPersona(personaId, scripts, weekLabel) {
   return stamped;
 }
 
+// ─── METRICS ──────────────────────────────────────────────────────────────────
+// Metrics are stored as a flat map: { [scriptId]: metricsObject }
+
+function loadAllMetrics() {
+  try { return JSON.parse(localStorage.getItem(METRICS_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function loadMetrics(scriptId) {
+  return loadAllMetrics()[scriptId] || null;
+}
+
+/**
+ * Save (upsert) metrics for a script.
+ * @param {string} scriptId
+ * @param {Object} metrics - { views, likes, comments, shares, saves, retention, notes }
+ */
+function saveMetrics(scriptId, metrics) {
+  const all = loadAllMetrics();
+  all[scriptId] = { ...metrics, recordedAt: new Date().toISOString() };
+  localStorage.setItem(METRICS_KEY, JSON.stringify(all));
+}
+
+function deleteMetrics(scriptId) {
+  const all = loadAllMetrics();
+  delete all[scriptId];
+  localStorage.setItem(METRICS_KEY, JSON.stringify(all));
+}
+
 function clearAllData() {
   localStorage.removeItem(PERSONAS_KEY);
   localStorage.removeItem(SCRIPTS_KEY);
   localStorage.removeItem(SETTINGS_KEY);
+  localStorage.removeItem(METRICS_KEY);
 }
