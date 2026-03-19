@@ -12,6 +12,7 @@ let selectedPersonaId = null;   // selected in generate view
 let editingPersonaId  = null;   // persona being edited in the form
 let currentResearch   = null;   // research results from last run
 let genDays           = 5;      // posting days per week for generation
+let genFunnel         = 'tof';  // 'tof' | 'mof' | 'bof'
 let clientMode        = false;  // true when a client is logged into the portal
 let clientModeId      = null;   // persona id of logged-in client
 
@@ -354,6 +355,8 @@ function showGenerateConfig() {
   });
 }
 
+const FUNNEL_LABELS = { tof: 'Top of Funnel', mof: 'Mid Funnel', bof: 'Bottom of Funnel' };
+
 function updateScriptsCalc(persona) {
   const p = persona || getPersona(selectedPersonaId);
   if (!p) return;
@@ -385,6 +388,15 @@ function bindGenerateView() {
       btn.classList.add('active');
       genDays = parseInt(btn.dataset.days);
       updateScriptsCalc();
+    });
+  });
+
+  // Funnel toggle buttons
+  document.querySelectorAll('.funnel-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.funnel-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      genFunnel = btn.dataset.funnel;
     });
   });
 
@@ -435,7 +447,7 @@ async function startGeneration() {
   ].filter(Boolean);
   if (!platforms.length) platforms.push('tiktok', 'instagram');
 
-  const config = { platforms, days: genDays };
+  const config = { platforms, days: genDays, funnel: genFunnel };
   const totalScripts = 3 * platforms.length * genDays;
 
   // ── Enter loading state ───────────────────────────────────────────────────
@@ -480,12 +492,15 @@ async function startGeneration() {
     );
 
     setProgressStep('prog-save', 'done');
+    // Stamp funnel on every script before saving
+    scripts.forEach(s => { s.funnel = genFunnel; });
     saveScriptsForPersona(persona.id, scripts, weekLabel);
 
     hide('gen-progress');
     const days  = [...new Set(scripts.map(s => s.day))].length;
+    const fLabel = FUNNEL_LABELS[genFunnel] || genFunnel;
     $('gen-success-msg').textContent =
-      `${scripts.length} scripts generated — 3 per platform per day across ${days} days. Saved to library.`;
+      `${scripts.length} ${fLabel} scripts generated — 3 per platform per day across ${days} days. Saved to library.`;
     show('gen-success');
 
     renderLibrary();
@@ -712,6 +727,11 @@ function scriptCardHtml(s, idx, personas, allMetrics) {
     hasCarousel  && '<span class="content-icon" title="Carousel">⧉</span>',
   ].filter(Boolean).join('');
 
+  const funnelLabels = { tof: 'TOF', mof: 'MOF', bof: 'BOF' };
+  const funnelTag = s.funnel
+    ? `<span class="funnel-badge funnel-${s.funnel}">${funnelLabels[s.funnel] || s.funnel.toUpperCase()}</span>`
+    : '';
+
   const metricsTag = metrics
     ? `<span class="metrics-pill">${metrics.views ? formatViews(metrics.views) + ' views' : '📊 Tracked'}</span>`
     : '';
@@ -725,6 +745,7 @@ function scriptCardHtml(s, idx, personas, allMetrics) {
           ${personaName ? `<span class="client-meta-tag" style="font-size:0.65rem">${esc(personaName)}</span>` : ''}
           <span class="platform-badge ${platformCls}">${s.platform === 'tiktok' ? 'TikTok' : 'IG Reel'}</span>
           <span class="type-badge ${typeCls}">${s.type}</span>
+          ${funnelTag}
         </div>
       </div>
       <div class="card-body">

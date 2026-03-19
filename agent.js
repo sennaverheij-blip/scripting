@@ -49,16 +49,79 @@ function extractJson(raw) {
   return JSON.parse(clean);
 }
 
+// ─── FUNNEL STAGE DEFINITIONS ─────────────────────────────────────────────────
+const FUNNEL_CONFIG = {
+  tof: {
+    label: 'Top of Funnel (Awareness)',
+    researchFocus: `You are researching AWARENESS-stage content. The goal is to reach COLD audiences who do not know this creator yet.
+Focus on:
+- Content that travels outside existing followers (high shareability, relatable broad appeal)
+- Pattern-interrupts, curiosity hooks, and entertainment-first formats
+- Topics that speak to the problem, not the solution
+- Zero selling — value and entertainment only
+- Content that makes strangers stop scrolling and follow`,
+    scriptFocus: `FUNNEL STAGE: TOP OF FUNNEL (Awareness)
+AUDIENCE: Cold — they do not know this creator. Reach new viewers.
+OBJECTIVE: Stop the scroll, create a follow, build brand awareness.
+TONE: Relatable, entertaining, curiosity-driven. Zero selling.
+CTA STYLE: Soft — "follow for more", "save this", "share with someone who needs this", "comment X if you agree"
+FORBIDDEN: Pricing, offers, "DM me", "apply now", service pitches, urgency tactics
+TYPE DISTRIBUTION PRIORITY: Value and Entertainment heavy — make it shareable`,
+    typeWeights: { value: 0.40, entertainment: 0.35, education: 0.20, softSell: 0.05 },
+    formats: 'Pattern Interrupt, Contrarian Take, Hot Take, Unfiltered Rant, Transformation Before-After, Relatable Story, Trending Format',
+  },
+  mof: {
+    label: 'Mid Funnel (Consideration)',
+    researchFocus: `You are researching CONSIDERATION-stage content. The goal is to deepen trust with warm audiences who already know this creator.
+Focus on:
+- Authority-building content that demonstrates deep expertise
+- Education-heavy formats that go one level deeper than TOF content
+- Myth-busting, case studies, frameworks, step-by-step breakdowns
+- Light social proof woven naturally into value-driven content
+- Content that makes viewers think "this person really knows their stuff"`,
+    scriptFocus: `FUNNEL STAGE: MID FUNNEL (Consideration)
+AUDIENCE: Warm — they follow or have seen this creator before. Deepen trust.
+OBJECTIVE: Build authority, demonstrate expertise, move viewers toward a decision.
+TONE: Confident expert, educational, slightly more direct. Light social proof allowed.
+CTA STYLE: Medium — "comment below", "DM me [word]", "link in bio for more", "save this framework"
+ALLOWED: Mentioning results (yours or clients'), frameworks, case studies. No hard pitches.
+TYPE DISTRIBUTION PRIORITY: Education and Value heavy — establish authority`,
+    typeWeights: { value: 0.30, entertainment: 0.15, education: 0.40, softSell: 0.15 },
+    formats: 'Step-by-Step Walkthrough, 3 Mistakes List, Authority Callout, Quiet Flex / Calm Authority, Problem-Solution, Contrarian Take, Case Study',
+  },
+  bof: {
+    label: 'Bottom of Funnel (Conversion)',
+    researchFocus: `You are researching CONVERSION-stage content. The goal is to turn warm, ready-to-buy audiences into paying clients.
+Focus on:
+- Direct response content — clear offer, clear CTA, clear outcome
+- Testimonials, before/after transformations, objection-handling
+- Urgency, scarcity, social proof, results
+- Content that speaks to product-aware people who just need the final nudge
+- Formats that prompt direct action: DM, apply, book a call, buy`,
+    scriptFocus: `FUNNEL STAGE: BOTTOM OF FUNNEL (Conversion)
+AUDIENCE: Hot — warm followers ready to buy. Convert them.
+OBJECTIVE: Drive direct action — DM, apply, book a call, purchase.
+TONE: Direct, confident, results-focused. Create urgency. Speak to the buyer.
+CTA STYLE: Direct — "DM me [word]", "link in bio — book your call", "apply now — limited spots", "comment [word] for details"
+REQUIRED: Clear outcome stated, social proof or results referenced, specific offer implied or named.
+TYPE DISTRIBUTION PRIORITY: Soft Sell and Value mix — move people to act`,
+    typeWeights: { value: 0.25, entertainment: 0.05, education: 0.20, softSell: 0.50 },
+    formats: 'Soft Sell, Transformation Before-After, Authority Callout, Quiet Flex / Calm Authority, Problem-Solution, Testimonial Story, Objection Handling, Offer Reveal',
+  },
+};
+
 // ─── PHASE 1: DEEP NICHE RESEARCH ─────────────────────────────────────────────
-async function researchNiche(persona, apiKey, onStatus) {
+async function researchNiche(persona, config, apiKey, onStatus) {
   onStatus('Researching current best practices for: ' + persona.niche + '...');
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
 
-  const language = persona.language || 'English';
-  const langNote = language !== 'English'
+  const funnel    = config.funnel || 'tof';
+  const fCfg      = FUNNEL_CONFIG[funnel];
+  const language  = persona.language || 'English';
+  const langNote  = language !== 'English'
     ? `\n\nLANGUAGE: Write all content values, examples, hook lines, pain points, and topic descriptions in ${language}. JSON keys must remain in English.`
     : '';
 
@@ -66,11 +129,15 @@ async function researchNiche(persona, apiKey, onStatus) {
 
 Today is ${today}.
 
-Your analysis must be SPECIFIC and ACTIONABLE — not generic best practices but actual patterns that are working RIGHT NOW in the specific niche you are given. Every insight you provide must be something a creator could act on immediately to make better-performing content.${langNote}`;
+Your analysis must be SPECIFIC and ACTIONABLE — not generic best practices but actual patterns that are working RIGHT NOW in the specific niche you are given. Every insight you provide must be something a creator could act on immediately to make better-performing content.
+
+FUNNEL STAGE CONTEXT:
+${fCfg.researchFocus}${langNote}`;
 
   const user = `Conduct a deep, current content strategy analysis for this niche and client.
 
 NICHE: ${persona.niche}
+FUNNEL STAGE: ${fCfg.label}
 
 ICP PROFILE:
 ${persona.icpDoc || '(Infer from niche — describe the exact person this content is for)'}
@@ -78,25 +145,25 @@ ${persona.icpDoc || '(Infer from niche — describe the exact person this conten
 OFFER / SERVICES:
 ${persona.offerDoc || '(Infer from niche — what problem is being solved)'}
 
-Analyse the following dimensions deeply and specifically:
+Analyse the following dimensions deeply and specifically, always through the lens of the ${fCfg.label} stage:
 
-1. WHAT IS WORKING RIGHT NOW (top 6–8 topic categories getting real traction in this niche on TikTok/Reels at this moment — be specific, not generic)
+1. WHAT IS WORKING RIGHT NOW (top 6–8 topic categories getting real traction in this niche on TikTok/Reels at this moment for ${fCfg.label} content — be specific, not generic)
 
-2. HOOK STRUCTURES THAT STOP THE SCROLL (4–6 proven hook patterns with specific language examples — the exact opening moves that are getting clicks right now in this niche)
+2. HOOK STRUCTURES THAT STOP THE SCROLL (4–6 proven hook patterns for ${fCfg.label} — with specific language examples that match this funnel stage's audience awareness level)
 
-3. CONTENT FORMATS DOMINATING THIS NICHE (4–6 specific formats with explanation of why they outperform — include format mechanics, not just names)
+3. CONTENT FORMATS DOMINATING THIS NICHE (4–6 specific formats that work for ${fCfg.label} content — include format mechanics and why they work at this funnel stage)
 
-4. PAIN POINTS BEING ACTIVELY VOICED (6–8 frustrations, fears, or failures the ICP is searching, commenting, and creating content about right now — specific language they use)
+4. PAIN POINTS BEING ACTIVELY VOICED (6–8 frustrations, fears, or desires that are relevant at the ${fCfg.label} stage — specific ICP language)
 
-5. CONTENT ANGLES THAT POSITION THE OFFER (4–6 angles that create genuine demand for the service without sounding like an ad)
+5. CONTENT ANGLES THAT MATCH THIS FUNNEL STAGE (4–6 angles that are appropriate for ${fCfg.label} — the right level of selling, authority, or awareness content)
 
-6. WHAT IS OVERSATURATED / WHAT TO AVOID (3–4 content types or topics that are overdone and will underperform — what top creators have moved away from)
+6. WHAT IS OVERSATURATED / WHAT TO AVOID (3–4 content types or topics that are overdone and will underperform at this funnel stage)
 
 7. PLATFORM-SPECIFIC SIGNALS (what is the TikTok algorithm rewarding right now for this niche vs Instagram Reels — specific signals, completion triggers, format preferences)
 
 8. CONTENT GAPS AND OPPORTUNITIES (2–3 underserved angles that the ICP wants but isn't getting — these become differentiated content)
 
-9. WEEKLY STRATEGY SUMMARY (2–3 sentences: what is the single most important strategic direction for this week's content based on all the above)
+9. WEEKLY STRATEGY SUMMARY (2–3 sentences: the most important strategic direction for this week's ${fCfg.label} content based on all the above)
 
 Return ONLY a JSON object. No markdown, no preamble, no extra keys:
 {
@@ -134,16 +201,18 @@ Return ONLY a JSON object. No markdown, no preamble, no extra keys:
  * @param {Object} research
  * @param {string} apiKey
  */
-async function generateBatch(platform, count, batchIndex, totalBatches, persona, research, apiKey) {
+async function generateBatch(platform, count, batchIndex, totalBatches, persona, config, research, apiKey) {
   const today = new Date().toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
   });
 
   const platformLabel = platform === 'tiktok' ? 'TikTok' : 'Instagram Reels';
   const language      = persona.language || 'English';
+  const funnel        = config.funnel || 'tof';
+  const fCfg          = FUNNEL_CONFIG[funnel];
 
-  // Distribute content types across batches
-  const typeDistribution = buildTypeDistribution(count);
+  // Distribute content types based on funnel stage
+  const typeDistribution = buildTypeDistribution(count, funnel);
 
   // Tell subsequent batches to use different topics to avoid repetition
   const batchNote = totalBatches > 1
@@ -155,6 +224,8 @@ async function generateBatch(platform, count, batchIndex, totalBatches, persona,
     : '';
 
   const system = `You are an elite short-form video scriptwriter and content strategist specialised in ${persona.niche} for ${platformLabel}.${langInstruction}
+
+${fCfg.scriptFocus}
 
 For each script you generate FOUR content formats from the same core idea:
 1. Full video script (spoken word)
@@ -177,7 +248,7 @@ CONTENT QUALITY:
 - 100% grounded in current best practices and content patterns for this niche
 - Deliver one clear, memorable idea per script — no rambling, no padding`;
 
-  const user = `Generate ${count} ${platformLabel} scripts for ${persona.name || 'this client'}. Week of ${today}.${batchNote}
+  const user = `Generate ${count} ${platformLabel} ${fCfg.label} scripts for ${persona.name || 'this client'}. Week of ${today}.${batchNote}
 
 CLIENT: ${persona.name || 'Client'}
 NICHE: ${persona.niche}
@@ -223,7 +294,7 @@ SCRIPT REQUIREMENTS:
 - Platform: ${platformLabel} ONLY
 - Count: exactly ${count} scripts
 - Type distribution: ${typeDistribution.join(', ')}
-- Formats to use (vary them): Problem-Solution, Contrarian Take, Unfiltered Rant, Step-by-Step Walkthrough, 3 Mistakes List, Authority Callout, Quiet Flex / Calm Authority, Transformation Before-After, Hot Take, Pattern Interrupt
+- Formats to use (vary them, prioritise funnel-appropriate ones): ${fCfg.formats}
 - Each script needs TWO hook variants (hookA and hookB) — different angles, same body
 - Script body: EXACTLY 110–140 words. Count every word before finalising.
 - No two scripts should share the same topic or format
@@ -272,11 +343,16 @@ Return ONLY a JSON array of exactly ${count} objects. No markdown, no preamble, 
 }
 
 // ─── HELPER: TYPE DISTRIBUTION ─────────────────────────────────────────────────
-function buildTypeDistribution(count) {
-  const softSell    = Math.max(1, Math.round(count * 0.15));
-  const value       = Math.round(count * 0.37);
-  const education   = Math.round(count * 0.25);
-  const entertainment = Math.max(0, count - value - education - softSell);
+function buildTypeDistribution(count, funnel) {
+  const weights = FUNNEL_CONFIG[funnel || 'tof']?.typeWeights || {
+    value: 0.37, entertainment: 0.23, education: 0.25, softSell: 0.15,
+  };
+
+  const softSell      = Math.max(funnel === 'bof' ? 2 : 0, Math.round(count * weights.softSell));
+  const entertainment = Math.max(funnel === 'tof' ? 1 : 0, Math.round(count * weights.entertainment));
+  const education     = Math.round(count * weights.education);
+  const value         = Math.max(1, count - softSell - entertainment - education);
+
   const dist = [];
   if (value > 0)         dist.push(`${value}x Value`);
   if (education > 0)     dist.push(`${education}x Education`);
@@ -333,7 +409,7 @@ async function runContentAgent(persona, config, apiKey, onStatus, onResearch, on
   const scriptsPerPlatform  = 3 * days;
 
   // ── Phase 1: Research ───────────────────────────────────────────────────────
-  const research = await researchNiche(persona, apiKey, onStatus);
+  const research = await researchNiche(persona, config, apiKey, onStatus);
   if (onResearch) onResearch(research);
 
   // ── Phase 2: Generate per platform, in batches ──────────────────────────────
@@ -360,7 +436,7 @@ async function runContentAgent(persona, config, apiKey, onStatus, onResearch, on
 
       const scripts = await generateBatch(
         platform, batchCount, b, numBatches,
-        persona, research, apiKey,
+        persona, config, research, apiKey,
       );
 
       allScripts.push(...scripts);
