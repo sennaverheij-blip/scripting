@@ -12,10 +12,10 @@
   --border: #2a2a3d;
   --text: #e8e8f0;
   --text-muted: #8888a0;
-  --accent: #6c5ce7;
-  --accent-hover: #5a4bd4;
-  --accent-glow: rgba(108, 92, 231, 0.15);
-  --accent-border: rgba(108, 92, 231, 0.3);
+  --accent: #f97316;
+  --accent-hover: #ea6c0a;
+  --accent-glow: rgba(249, 115, 22, 0.12);
+  --accent-border: rgba(249, 115, 22, 0.35);
   --tiktok: #ff0050;
   --tiktok-bg: rgba(255, 0, 80, 0.1);
   --instagram: #e1306c;
@@ -2095,6 +2095,272 @@ main {
   gap: 4px;
 }
 
+/* ─── STATUS BADGES ──────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge.status-draft {
+  background: var(--surface-3);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.status-badge.status-scheduled {
+  background: rgba(9, 132, 227, 0.12);
+  color: var(--education);
+  border: 1px solid rgba(9, 132, 227, 0.3);
+}
+
+.status-badge.status-posted {
+  background: rgba(0, 184, 148, 0.12);
+  color: var(--success);
+  border: 1px solid rgba(0, 184, 148, 0.3);
+}
+
+/* ─── TRACKER VIEW ────────────────────────────── */
+.tracker-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tracker-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tracker-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tracker-header-row {
+  display: grid;
+  grid-template-columns: 110px 110px 1fr 80px 180px 80px 70px;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.tracker-row {
+  display: grid;
+  grid-template-columns: 110px 110px 1fr 80px 180px 80px 70px;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tracker-row:last-child { border-bottom: none; }
+.tracker-row:hover { background: var(--surface-2); }
+
+.tracker-quick-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.tracker-quick-status.status-draft {
+  background: var(--surface-3);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.tracker-quick-status.status-draft:hover {
+  border-color: var(--education);
+  color: var(--education);
+}
+
+.tracker-quick-status.status-scheduled {
+  background: rgba(9, 132, 227, 0.12);
+  color: var(--education);
+  border-color: rgba(9, 132, 227, 0.3);
+}
+.tracker-quick-status.status-scheduled:hover {
+  background: rgba(0, 184, 148, 0.12);
+  color: var(--success);
+  border-color: rgba(0, 184, 148, 0.3);
+}
+
+.tracker-quick-status.status-posted {
+  background: rgba(0, 184, 148, 0.12);
+  color: var(--success);
+  border-color: rgba(0, 184, 148, 0.3);
+}
+.tracker-quick-status.status-posted:hover {
+  background: var(--surface-3);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.tracker-topic-text {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.tracker-format-text {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.td-slot {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.td-views {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.td-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tracker-date-inp {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  font-size: 0.78rem;
+  padding: 4px 6px;
+  cursor: pointer;
+  width: 130px;
+}
+
+.tracker-date-inp:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.tracker-no-date {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.tracker-url-link {
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  transition: background 0.15s;
+}
+.tracker-url-link:hover { background: var(--accent-glow); }
+
+/* ── Modal tracker section ── */
+.tracker-section {
+  margin-bottom: 20px;
+}
+
+.tracker-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.tracker-status-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tracker-status-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.tracker-status-btn:hover { border-color: var(--accent-border); color: var(--text); }
+
+.tracker-status-btn.active[data-status="draft"] {
+  background: var(--surface-3);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.tracker-status-btn.active[data-status="scheduled"] {
+  background: rgba(9, 132, 227, 0.12);
+  border-color: rgba(9, 132, 227, 0.4);
+  color: var(--education);
+}
+
+.tracker-status-btn.active[data-status="posted"] {
+  background: rgba(0, 184, 148, 0.12);
+  border-color: rgba(0, 184, 148, 0.4);
+  color: var(--success);
+}
+
+.tracker-date-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+
+.tracker-post-link {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: 4px;
+}
+.tracker-post-link:hover { text-decoration: underline; }
+
+.tracker-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
 /* ─── FUNNEL TOGGLE ──────────────────────────── */
 .funnel-config-row {
   margin-top: 20px;
@@ -2309,6 +2575,10 @@ main {
   .search-box { width: 100%; }
   .form-row-2, .form-row-3, .gen-config-row { grid-template-columns: 1fr; }
   .funnel-toggle { flex-direction: column; }
+  .tracker-header-row { display: none; }
+  .tracker-row { grid-template-columns: 100px 1fr; grid-template-rows: auto auto auto; gap: 6px; }
+  .td-platform, .td-slot, .td-views, .td-actions { display: none; }
+  .tracker-stats-row { flex-wrap: wrap; gap: 8px; }
   .modal-body { padding: 20px; }
   .form-panel { width: 100%; height: 100vh; border-radius: 0; }
   .form-overlay { padding: 0; }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Content Agent</title>
+  <title>RevStackOps</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,13 +12,14 @@
     <div class="header-inner">
       <div class="brand">
         <span class="brand-mark">◈</span>
-        <h1>Content Agent</h1>
+        <h1>RevStackOps</h1>
       </div>
       <nav class="main-nav">
         <button class="nav-btn active" data-view="clients">Clients</button>
         <button class="nav-btn" data-view="generate">Generate</button>
         <button class="nav-btn" data-view="library">Library</button>
         <button class="nav-btn nav-settings" data-view="settings">⚙</button>
+        <button class="nav-btn" data-view="tracker">Tracker</button>
         <button class="nav-btn nav-portal-btn" id="open-portal-btn" title="Client portal login">Portal</button>
       </nav>
     </div>
@@ -28,7 +29,7 @@
   <div id="setup-screen" class="setup-screen hidden">
     <div class="setup-card">
       <div class="setup-mark">◈</div>
-      <h2>Welcome to Content Agent</h2>
+      <h2>Welcome to RevStackOps</h2>
       <p>Add your Anthropic API key to get started. It's stored locally in your browser and sent only to Anthropic's API.</p>
       <div class="form-group">
         <label>Anthropic API Key</label>
@@ -372,6 +373,41 @@
       </div>
     </div>
 
+    <!-- ═══════════════════ TRACKER VIEW ════════════════════ -->
+    <div id="view-tracker" class="view">
+      <div class="view-header">
+        <div>
+          <h2>Content Tracker</h2>
+          <p class="view-subtitle">Mark scripts as posted, log dates &amp; links, track performance</p>
+        </div>
+        <div id="tracker-stats" class="tracker-stats-row"></div>
+      </div>
+
+      <section class="filters">
+        <div class="filter-group" id="tracker-persona-filter"></div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all" data-group="tracker-status">All</button>
+          <button class="filter-btn" data-filter="draft" data-group="tracker-status">Draft</button>
+          <button class="filter-btn" data-filter="scheduled" data-group="tracker-status">Scheduled</button>
+          <button class="filter-btn" data-filter="posted" data-group="tracker-status">Posted</button>
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all" data-group="tracker-platform">All</button>
+          <button class="filter-btn" data-filter="tiktok" data-group="tracker-platform">TikTok</button>
+          <button class="filter-btn" data-filter="instagram" data-group="tracker-platform">Reels</button>
+        </div>
+      </section>
+
+      <div id="tracker-list" class="tracker-list"></div>
+
+      <div class="empty-state hidden" id="tracker-empty">
+        <div class="empty-icon">📅</div>
+        <h3>No scripts to track yet</h3>
+        <p>Generate content for a client, then mark scripts here as you post them</p>
+        <button class="btn-primary" id="tracker-go-generate">Generate Content</button>
+      </div>
+    </div>
+
     <!-- ═══════════════════ SETTINGS VIEW ═══════════════════ -->
     <div id="view-settings" class="view">
       <div class="view-header">
@@ -397,8 +433,12 @@
 
         <div class="settings-card">
           <h3>About</h3>
-          <p class="settings-desc">AI-powered content agent for short-form video scripts.</p>
+          <p class="settings-desc">AI-powered short-form video content engine by RevStackOps LLC.</p>
           <div class="info-table">
+            <div class="info-row">
+              <span>Company</span>
+              <span>RevStackOps LLC</span>
+            </div>
             <div class="info-row">
               <span>Model</span>
               <span>claude-sonnet-4-6</span>

@@ -15,6 +15,7 @@ let genDays           = 5;      // posting days per week for generation
 let genFunnel         = 'tof';  // 'tof' | 'mof' | 'bof'
 let clientMode        = false;  // true when a client is logged into the portal
 let clientModeId      = null;   // persona id of logged-in client
+let trackerFilters    = { status: 'all', platform: 'all', personaId: 'all' };
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindSettings();
   bindModal();
   bindPortal();
+  bindTracker();
   renderClients();
   renderLibrary();
   setWeekDefault();
@@ -90,6 +92,7 @@ function switchView(view) {
   if (view === 'generate') renderGenerateClientGrid();
   if (view === 'clients')  renderClients();
   if (view === 'settings') renderSettings();
+  if (view === 'tracker')  renderTracker();
 }
 
 // ─── CLIENT FORM ──────────────────────────────────────────────────────────────
@@ -732,8 +735,11 @@ function scriptCardHtml(s, idx, personas, allMetrics) {
     ? `<span class="funnel-badge funnel-${s.funnel}">${funnelLabels[s.funnel] || s.funnel.toUpperCase()}</span>`
     : '';
 
-  const metricsTag = metrics
-    ? `<span class="metrics-pill">${metrics.views ? formatViews(metrics.views) + ' views' : '📊 Tracked'}</span>`
+  const status    = metrics?.status || 'draft';
+  const statusTag = `<span class="status-badge status-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+
+  const metricsTag = metrics?.views
+    ? `<span class="metrics-pill">${formatViews(metrics.views)} views</span>`
     : '';
 
   return `
@@ -757,6 +763,7 @@ function scriptCardHtml(s, idx, personas, allMetrics) {
       <div class="card-footer">
         <span class="word-count">${wordCount}w · ~${duration}s ${metricsTag}</span>
         <div class="card-actions">
+          ${statusTag}
           <button class="action-btn copy-hook-btn"
             data-hook="${escAttr(s.hookA || '')}"
             onclick="event.stopPropagation()">Copy Hook</button>
@@ -951,7 +958,7 @@ function openScriptModal(script) {
     { id: 'outline',  label: 'Outline',   hidden: !hasOutline },
     { id: 'screen',   label: 'On-Screen', hidden: !hasScreenTxt },
     { id: 'carousel', label: 'Carousel',  hidden: !hasCarousel },
-    { id: 'metrics',  label: existingMetrics ? '📊 Metrics' : 'Add Metrics' },
+    { id: 'metrics',  label: '📋 Tracker' },
   ].filter(t => !t.hidden);
 
   // ── Carousel HTML ───────────────────────────────────────────────────────────
@@ -1012,13 +1019,36 @@ function openScriptModal(script) {
     </div>
   ` : '<p class="empty-tab">No on-screen text — regenerate this client\'s content to get text overlays.</p>';
 
-  // ── Metrics HTML ─────────────────────────────────────────────────────────────
+  // ── Tracker + Metrics HTML ────────────────────────────────────────────────────
   const m = existingMetrics || {};
+  const currentStatus = m.status || 'draft';
   const metricsHtml = `
-    ${existingMetrics ? renderMetricsDisplay(existingMetrics, script.platform) : ''}
+    <div class="tracker-section">
+      <div class="tracker-section-title">Posting Status</div>
+      <div class="tracker-status-toggle">
+        <button class="tracker-status-btn ${currentStatus === 'draft'     ? 'active' : ''}" data-status="draft">Draft</button>
+        <button class="tracker-status-btn ${currentStatus === 'scheduled' ? 'active' : ''}" data-status="scheduled">Scheduled</button>
+        <button class="tracker-status-btn ${currentStatus === 'posted'    ? 'active' : ''}" data-status="posted">Posted</button>
+      </div>
+      <div class="tracker-date-row" id="tracker-date-row" style="${currentStatus === 'draft' ? 'display:none' : ''}">
+        <div class="metric-input-row">
+          <label id="tracker-date-label">${currentStatus === 'posted' ? 'Posted on' : 'Scheduled for'}</label>
+          <input type="date" id="m-post-date" class="form-input metric-inp" value="${m.postDate || ''}">
+        </div>
+        <div class="metric-input-row">
+          <label>Post URL</label>
+          <input type="url" id="m-post-url" class="form-input metric-inp" placeholder="https://tiktok.com/..." value="${m.postUrl || ''}">
+        </div>
+      </div>
+      ${m.postUrl ? `<a href="${escAttr(m.postUrl)}" target="_blank" rel="noopener" class="tracker-post-link">View live post ↗</a>` : ''}
+    </div>
+
+    <div class="tracker-divider"></div>
+
+    ${existingMetrics && (existingMetrics.views || existingMetrics.likes) ? renderMetricsDisplay(existingMetrics, script.platform) : ''}
     <div class="metrics-form">
-      <div class="metrics-form-title">${existingMetrics ? 'Update Metrics' : 'Log Post Performance'}</div>
-      <p class="tab-desc">Track how this script performs when posted. Helps identify what content to double down on.</p>
+      <div class="metrics-form-title">Performance Metrics</div>
+      <p class="tab-desc">Log how this post performs to identify what to double down on.</p>
       <div class="metrics-inputs">
         <div class="metric-input-row">
           <label>Views</label>
@@ -1050,7 +1080,7 @@ function openScriptModal(script) {
         <textarea id="m-notes" class="form-textarea" rows="2" placeholder="e.g. Went viral on day 2, hook B performed better...">${m.notes || ''}</textarea>
       </div>
       <div class="metrics-form-actions">
-        <button class="btn-primary" id="save-metrics-btn">Save Metrics</button>
+        <button class="btn-primary" id="save-metrics-btn">Save</button>
         ${existingMetrics ? `<button class="btn-danger" id="delete-metrics-btn">Remove</button>` : ''}
       </div>
     </div>
@@ -1169,10 +1199,34 @@ function openScriptModal(script) {
     btn.addEventListener('click', function () { copyModalBtn(this, this.dataset.copy); });
   });
 
+  // ── Tracker status toggle ─────────────────────────────────────────────────────
+  $('modalBody').querySelectorAll('.tracker-status-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $('modalBody').querySelectorAll('.tracker-status-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const s = btn.dataset.status;
+      const dateRow   = $('tracker-date-row');
+      const dateLabel = $('tracker-date-label');
+      if (s === 'draft') {
+        dateRow.style.display = 'none';
+      } else {
+        dateRow.style.display = '';
+        dateLabel.textContent = s === 'posted' ? 'Posted on' : 'Scheduled for';
+        // Default date to today if empty
+        const dateInput = $('m-post-date');
+        if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+      }
+    });
+  });
+
   // ── Metrics save / delete ────────────────────────────────────────────────────
   $('save-metrics-btn')?.addEventListener('click', function () {
     if (!script.id) return;
+    const activeStatusBtn = $('modalBody').querySelector('.tracker-status-btn.active');
     const metrics = {
+      status:    activeStatusBtn?.dataset.status || 'draft',
+      postDate:  $('m-post-date')?.value || null,
+      postUrl:   $('m-post-url')?.value.trim() || null,
       views:     parseMetricInput('m-views'),
       likes:     parseMetricInput('m-likes'),
       comments:  parseMetricInput('m-comments'),
@@ -1185,7 +1239,8 @@ function openScriptModal(script) {
     const orig = this.textContent;
     this.textContent = 'Saved!';
     setTimeout(() => { this.textContent = orig; }, 1500);
-    renderLibrary(); // refresh card badges
+    renderLibrary();
+    if (activeView === 'tracker') renderTracker();
   });
 
   $('delete-metrics-btn')?.addEventListener('click', function () {
@@ -1284,6 +1339,194 @@ function renderSettings() {
   $('settings-api-key').value = key ? key : '';
 }
 
+// ─── TRACKER ──────────────────────────────────────────────────────────────────
+function bindTracker() {
+  document.querySelectorAll('#view-tracker .filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.group;
+      document.querySelectorAll(`#view-tracker .filter-btn[data-group="${group}"]`)
+        .forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (group === 'tracker-status')   trackerFilters.status   = btn.dataset.filter;
+      if (group === 'tracker-platform') trackerFilters.platform = btn.dataset.filter;
+      renderTracker();
+    });
+  });
+
+  $('tracker-go-generate')?.addEventListener('click', () => switchView('generate'));
+}
+
+function renderTracker() {
+  const allScripts = loadAllScripts();
+  const personas   = loadPersonas();
+  const allMetrics = loadAllMetrics();
+
+  // Rebuild persona filter
+  renderTrackerPersonaFilter(personas);
+
+  // Filter
+  const filtered = allScripts.filter(s => {
+    const m = s.id ? allMetrics[s.id] : null;
+    const status = m?.status || 'draft';
+    const matchPersona  = trackerFilters.personaId === 'all' || s.personaId === trackerFilters.personaId;
+    const matchStatus   = trackerFilters.status   === 'all' || status === trackerFilters.status;
+    const matchPlatform = trackerFilters.platform === 'all' || s.platform === trackerFilters.platform;
+    return matchPersona && matchStatus && matchPlatform;
+  });
+
+  // Stats
+  const posted    = allScripts.filter(s => (allMetrics[s.id]?.status) === 'posted').length;
+  const scheduled = allScripts.filter(s => (allMetrics[s.id]?.status) === 'scheduled').length;
+  const draft     = allScripts.length - posted - scheduled;
+  $('tracker-stats').innerHTML = `
+    <span class="tracker-stat"><span class="status-badge status-draft">Draft</span> ${draft}</span>
+    <span class="tracker-stat"><span class="status-badge status-scheduled">Scheduled</span> ${scheduled}</span>
+    <span class="tracker-stat"><span class="status-badge status-posted">Posted</span> ${posted}</span>
+  `;
+
+  const list  = $('tracker-list');
+  const empty = $('tracker-empty');
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    show('tracker-empty');
+    return;
+  }
+  hide('tracker-empty');
+
+  // Sort: posted (by date desc) → scheduled (by date asc) → draft
+  const statusOrder = { posted: 0, scheduled: 1, draft: 2 };
+  filtered.sort((a, b) => {
+    const ma = allMetrics[a.id] || {}, mb = allMetrics[b.id] || {};
+    const sa = ma.status || 'draft', sb = mb.status || 'draft';
+    if (sa !== sb) return statusOrder[sa] - statusOrder[sb];
+    const da = ma.postDate || '', db = mb.postDate || '';
+    if (sa === 'posted')    return db.localeCompare(da); // newest first
+    if (sa === 'scheduled') return da.localeCompare(db); // soonest first
+    return 0;
+  });
+
+  list.innerHTML = `
+    <div class="tracker-header-row">
+      <div class="th-status">Status</div>
+      <div class="th-platform">Platform</div>
+      <div class="th-topic">Topic &amp; Format</div>
+      <div class="th-slot">Slot</div>
+      <div class="th-date">Date</div>
+      <div class="th-views">Views</div>
+      <div class="th-actions"></div>
+    </div>
+    ${filtered.map(s => trackerRowHtml(s, allMetrics[s.id] || {}, personas)).join('')}
+  `;
+
+  // Bind quick-status toggles
+  list.querySelectorAll('.tracker-quick-status').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const scriptId = btn.closest('.tracker-row').dataset.id;
+      const current  = btn.dataset.status;
+      const cycle    = { draft: 'scheduled', scheduled: 'posted', posted: 'draft' };
+      const next     = cycle[current] || 'draft';
+      const existing = allMetrics[scriptId] || {};
+      const patch    = { ...existing, status: next };
+      if (next !== 'draft' && !existing.postDate) {
+        patch.postDate = new Date().toISOString().slice(0, 10);
+      }
+      saveMetrics(scriptId, patch);
+      renderTracker();
+      renderLibrary();
+    });
+  });
+
+  // Bind date inputs
+  list.querySelectorAll('.tracker-date-inp').forEach(input => {
+    input.addEventListener('change', e => {
+      e.stopPropagation();
+      const scriptId = input.closest('.tracker-row').dataset.id;
+      const existing = allMetrics[scriptId] || {};
+      saveMetrics(scriptId, { ...existing, postDate: input.value });
+    });
+  });
+
+  // Open modal on row click
+  list.querySelectorAll('.tracker-row').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.tracker-quick-status') || e.target.classList.contains('tracker-date-inp')) return;
+      const script = filtered.find(s => s.id === row.dataset.id);
+      if (script) openScriptModal(script);
+    });
+  });
+}
+
+function trackerRowHtml(s, m, personas) {
+  const status     = m.status || 'draft';
+  const platform   = s.platform === 'tiktok' ? 'TikTok' : 'IG Reel';
+  const platCls    = s.platform;
+  const funnelMap  = { tof: 'TOF', mof: 'MOF', bof: 'BOF' };
+  const funnelTag  = s.funnel ? `<span class="funnel-badge funnel-${s.funnel}">${funnelMap[s.funnel] || ''}</span>` : '';
+  const personName = personas.find(p => p.id === s.personaId)?.name || '';
+  const daySlot    = s.day ? `${s.day} #${s.slot || ''}` : '—';
+  const views      = m.views ? formatViews(m.views) : '—';
+  const nextStatus = { draft: 'Scheduled →', scheduled: 'Posted →', posted: '↩ Draft' };
+
+  return `
+    <div class="tracker-row" data-id="${s.id}">
+      <div class="td-status">
+        <button class="tracker-quick-status status-${status}" data-status="${status}" title="Click to advance status">
+          ${status.charAt(0).toUpperCase() + status.slice(1)}
+        </button>
+      </div>
+      <div class="td-platform">
+        <span class="platform-badge ${platCls}">${platform}</span>
+        ${funnelTag}
+      </div>
+      <div class="td-topic">
+        <div class="tracker-topic-text">${esc(s.topic || '')}</div>
+        <div class="tracker-format-text">${esc(s.format || '')}${personName ? ` · ${esc(personName)}` : ''}</div>
+      </div>
+      <div class="td-slot">${daySlot}</div>
+      <div class="td-date">
+        ${status !== 'draft'
+          ? `<input class="tracker-date-inp" type="date" value="${m.postDate || ''}">`
+          : '<span class="tracker-no-date">—</span>'
+        }
+        ${m.postUrl ? `<a href="${escAttr(m.postUrl)}" target="_blank" rel="noopener" class="tracker-url-link" title="View post" onclick="event.stopPropagation()">↗</a>` : ''}
+      </div>
+      <div class="td-views">${views}</div>
+      <div class="td-actions">
+        <button class="action-btn">Open</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTrackerPersonaFilter(personas) {
+  const group = $('tracker-persona-filter');
+  if (!group) return;
+
+  if (clientMode && clientModeId) {
+    const p = personas.find(x => x.id === clientModeId);
+    group.innerHTML = p ? `<span class="filter-btn active" style="cursor:default">${esc(p.name)}</span>` : '';
+    return;
+  }
+
+  const current = trackerFilters.personaId;
+  group.innerHTML = [{ id: 'all', name: 'All Clients' }, ...personas].map(p => `
+    <button class="filter-btn ${current === p.id ? 'active' : ''}" data-filter="${p.id}" data-group="tracker-persona">
+      ${esc(p.name)}
+    </button>
+  `).join('');
+
+  group.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      trackerFilters.personaId = btn.dataset.filter;
+      renderTracker();
+    });
+  });
+}
+
 // ─── CLIENT PORTAL ────────────────────────────────────────────────────────────
 function bindPortal() {
   $('open-portal-btn').addEventListener('click', openPortalLogin);
@@ -1366,14 +1609,17 @@ function enterClientMode(personaId) {
   $('client-mode-name').textContent = p?.name || 'Client';
   show('client-mode-banner');
 
-  // Hide agency-only nav buttons
+  // Hide agency-only nav buttons — keep library and tracker accessible
   document.querySelectorAll('.nav-btn:not(.nav-settings)').forEach(btn => {
-    if (btn.dataset.view !== 'library') btn.classList.add('hidden');
+    if (btn.dataset.view !== 'library' && btn.dataset.view !== 'tracker') {
+      btn.classList.add('hidden');
+    }
   });
   $('open-portal-btn').classList.add('hidden');
 
   // Force library view, filtered to this client
-  libFilters.personaId = personaId;
+  libFilters.personaId    = personaId;
+  trackerFilters.personaId = personaId;
   switchView('library');
 }
 
@@ -1387,8 +1633,9 @@ function exitClientMode() {
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('hidden'));
   $('open-portal-btn').classList.remove('hidden');
 
-  // Reset persona filter
-  libFilters.personaId = 'all';
+  // Reset persona filters
+  libFilters.personaId     = 'all';
+  trackerFilters.personaId = 'all';
   switchView('clients');
 }
 
