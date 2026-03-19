@@ -19,6 +19,7 @@
         <button class="nav-btn" data-view="generate">Generate</button>
         <button class="nav-btn" data-view="library">Library</button>
         <button class="nav-btn nav-settings" data-view="settings">⚙</button>
+        <button class="nav-btn nav-portal-btn" id="open-portal-btn" title="Client portal login">Portal</button>
       </nav>
     </div>
   </header>
@@ -83,7 +84,7 @@
             </div>
           </div>
 
-          <div class="form-row-2">
+          <div class="form-row-3">
             <div class="form-group">
               <label>Platforms</label>
               <div class="checkbox-group">
@@ -106,6 +107,18 @@
                 <option value="8" selected>8 scripts / week</option>
                 <option value="10">10 scripts / week</option>
                 <option value="12">12 scripts / week</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Script Language</label>
+              <select id="f-language" class="form-input form-select">
+                <option value="English">English</option>
+                <option value="Dutch">Dutch</option>
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Portuguese">Portuguese</option>
+                <option value="Italian">Italian</option>
               </select>
             </div>
           </div>
@@ -158,6 +171,17 @@
             </div>
           </div>
         </div>
+
+          <div class="form-group">
+            <label>
+              Client Portal PIN
+              <span class="label-hint">Optional. Set a PIN so the client can log in and view their own scripts.</span>
+            </label>
+            <div class="key-input-wrap">
+              <input type="password" id="f-pin" class="form-input" placeholder="e.g. 1234 (leave blank for no portal access)">
+              <button class="key-toggle-btn" id="f-pin-toggle">Show</button>
+            </div>
+          </div>
 
         <div class="form-panel-footer">
           <button class="btn-danger hidden" id="delete-client-btn">Delete Client</button>
@@ -379,6 +403,36 @@
     </div>
 
   </main>
+
+  <!-- Client Portal Login Overlay -->
+  <div id="portal-overlay" class="portal-overlay hidden">
+    <div class="portal-card">
+      <button class="portal-close-btn" id="portal-close-btn">&times;</button>
+      <div class="portal-mark">◈</div>
+      <h2>Client Portal</h2>
+      <p>Select your name and enter your PIN to view your content.</p>
+      <div class="form-group">
+        <label>Your Name</label>
+        <select id="portal-client-select" class="form-input form-select">
+          <option value="">— Select a client —</option>
+        </select>
+      </div>
+      <div class="form-group" id="portal-pin-group" style="display:none">
+        <label>Portal PIN</label>
+        <input type="password" id="portal-pin-input" class="form-input" placeholder="Enter your PIN" maxlength="20">
+      </div>
+      <p id="portal-error" class="portal-error hidden">Incorrect PIN. Please try again.</p>
+      <button class="btn-primary full-width" id="portal-login-btn">Enter Portal</button>
+      <p class="setup-hint">No PIN set? Ask your content manager to add one to your profile.</p>
+    </div>
+  </div>
+
+  <!-- Client Mode Banner -->
+  <div id="client-mode-banner" class="client-mode-banner hidden">
+    <span id="client-mode-name"></span>
+    <span class="client-mode-label">Client Portal</span>
+    <button class="btn-ghost client-mode-logout" id="client-logout-btn">Log Out</button>
+  </div>
 
   <!-- Script Modal -->
   <div class="modal-overlay" id="modalOverlay">
