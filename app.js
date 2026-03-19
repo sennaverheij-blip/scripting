@@ -1555,21 +1555,21 @@ function bindPortal() {
 
 function openPortalLogin() {
   const personas = loadPersonas().filter(p => p.clientPin);
+  const hasClients = personas.length > 0;
+
   const sel = $('portal-client-select');
   sel.innerHTML = '<option value="">— Select a client —</option>' +
     personas.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
   $('portal-pin-group').style.display = 'none';
   $('portal-pin-input').value = '';
   hide('portal-error');
-  show('portal-overlay');
 
-  if (personas.length === 0) {
-    $('portal-login-btn').disabled = true;
-    $('portal-login-btn').title = 'No clients have a portal PIN set';
-  } else {
-    $('portal-login-btn').disabled = false;
-    $('portal-login-btn').title = '';
-  }
+  setVisible('portal-no-clients', !hasClients);
+  setVisible('portal-form-fields', hasClients);
+  setVisible('portal-desc', hasClients);
+
+  show('portal-overlay');
+  if (hasClients) sel.focus();
 }
 
 function closePortalLogin() {
@@ -1609,8 +1609,8 @@ function enterClientMode(personaId) {
   $('client-mode-name').textContent = p?.name || 'Client';
   show('client-mode-banner');
 
-  // Hide agency-only nav buttons — keep library and tracker accessible
-  document.querySelectorAll('.nav-btn:not(.nav-settings)').forEach(btn => {
+  // Hide all agency-only nav buttons; only Library and Tracker visible to clients
+  document.querySelectorAll('.nav-btn').forEach(btn => {
     if (btn.dataset.view !== 'library' && btn.dataset.view !== 'tracker') {
       btn.classList.add('hidden');
     }

@@ -18,10 +18,18 @@
         <button class="nav-btn active" data-view="clients">Clients</button>
         <button class="nav-btn" data-view="generate">Generate</button>
         <button class="nav-btn" data-view="library">Library</button>
-        <button class="nav-btn nav-settings" data-view="settings">⚙</button>
         <button class="nav-btn" data-view="tracker">Tracker</button>
+        <button class="nav-btn nav-settings" data-view="settings">⚙</button>
         <button class="nav-btn nav-portal-btn" id="open-portal-btn" title="Client portal login">Portal</button>
       </nav>
+    </div>
+
+    <!-- Client Mode Banner — inside sticky header so it's always visible -->
+    <div id="client-mode-banner" class="client-mode-banner hidden">
+      <span class="client-banner-brand">◈ RevStackOps</span>
+      <span id="client-mode-name" class="client-banner-name"></span>
+      <span class="client-mode-label">Client Portal</span>
+      <button class="btn-ghost client-mode-logout" id="client-logout-btn">Log Out</button>
     </div>
   </header>
 
@@ -469,29 +477,27 @@
     <div class="portal-card">
       <button class="portal-close-btn" id="portal-close-btn">&times;</button>
       <div class="portal-mark">◈</div>
+      <div class="portal-brand">RevStackOps</div>
       <h2>Client Portal</h2>
-      <p>Select your name and enter your PIN to view your content.</p>
-      <div class="form-group">
-        <label>Your Name</label>
-        <select id="portal-client-select" class="form-input form-select">
-          <option value="">— Select a client —</option>
-        </select>
+      <p id="portal-desc">Select your name and enter your PIN to view your content.</p>
+      <div id="portal-no-clients" class="portal-notice hidden">
+        No client portal PINs are set up yet. Add a PIN to a client profile first.
       </div>
-      <div class="form-group" id="portal-pin-group" style="display:none">
-        <label>Portal PIN</label>
-        <input type="password" id="portal-pin-input" class="form-input" placeholder="Enter your PIN" maxlength="20">
+      <div id="portal-form-fields">
+        <div class="form-group">
+          <label>Your Name</label>
+          <select id="portal-client-select" class="form-input form-select">
+            <option value="">— Select a client —</option>
+          </select>
+        </div>
+        <div class="form-group" id="portal-pin-group" style="display:none">
+          <label>Portal PIN</label>
+          <input type="password" id="portal-pin-input" class="form-input" placeholder="Enter your PIN" maxlength="20" autocomplete="current-password">
+        </div>
+        <p id="portal-error" class="portal-error hidden">Incorrect PIN. Please try again.</p>
+        <button class="btn-primary full-width" id="portal-login-btn">Enter Portal</button>
       </div>
-      <p id="portal-error" class="portal-error hidden">Incorrect PIN. Please try again.</p>
-      <button class="btn-primary full-width" id="portal-login-btn">Enter Portal</button>
-      <p class="setup-hint">No PIN set? Ask your content manager to add one to your profile.</p>
     </div>
-  </div>
-
-  <!-- Client Mode Banner -->
-  <div id="client-mode-banner" class="client-mode-banner hidden">
-    <span id="client-mode-name"></span>
-    <span class="client-mode-label">Client Portal</span>
-    <button class="btn-ghost client-mode-logout" id="client-logout-btn">Log Out</button>
   </div>
 
   <!-- Script Modal -->
