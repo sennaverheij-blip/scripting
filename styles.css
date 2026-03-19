@@ -2095,6 +2095,91 @@ main {
   gap: 4px;
 }
 
+/* ─── FUNNEL TOGGLE ──────────────────────────── */
+.funnel-config-row {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.funnel-toggle {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.funnel-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+
+.funnel-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.funnel-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--text);
+}
+
+.funnel-btn-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: inherit;
+}
+
+.funnel-btn.active .funnel-btn-title {
+  color: var(--accent);
+}
+
+.funnel-btn-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+/* Funnel badges on script cards */
+.funnel-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.funnel-badge.funnel-tof {
+  background: rgba(0, 184, 148, 0.15);
+  color: var(--value);
+  border: 1px solid rgba(0, 184, 148, 0.3);
+}
+
+.funnel-badge.funnel-mof {
+  background: rgba(9, 132, 227, 0.12);
+  color: var(--education);
+  border: 1px solid rgba(9, 132, 227, 0.3);
+}
+
+.funnel-badge.funnel-bof {
+  background: rgba(225, 112, 85, 0.12);
+  color: var(--soft-sell);
+  border: 1px solid rgba(225, 112, 85, 0.3);
+}
+
 /* ─── CLIENT PORTAL ──────────────────────────── */
 .portal-overlay {
   position: fixed;
@@ -2223,6 +2308,7 @@ main {
   .filter-group { width: 100%; overflow-x: auto; }
   .search-box { width: 100%; }
   .form-row-2, .form-row-3, .gen-config-row { grid-template-columns: 1fr; }
+  .funnel-toggle { flex-direction: column; }
   .modal-body { padding: 20px; }
   .form-panel { width: 100%; height: 100vh; border-radius: 0; }
   .form-overlay { padding: 0; }
