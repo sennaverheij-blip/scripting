@@ -144,22 +144,27 @@ async function generateBatch(platform, count, batchIndex, totalBatches, persona,
     ? `\nIMPORTANT: This is batch ${batchIndex + 1} of ${totalBatches} for ${platformLabel}. Use DIFFERENT topics and formats from earlier batches — no repeated angles.`
     : '';
 
-  const system = `You are an elite short-form video scriptwriter specialised in ${persona.niche} for ${platformLabel}.
+  const system = `You are an elite short-form video scriptwriter and content strategist specialised in ${persona.niche} for ${platformLabel}.
 
-STRICT LENGTH RULE: Every script body must be exactly 110–140 words. Count carefully.
-At a natural energetic pace (3 words per second), 110–140 words = 37–47 seconds — safely under 60 seconds.
+For each script you generate FOUR content formats from the same core idea:
+1. Full video script (spoken word)
+2. Outline (talking-point bullets for improvising)
+3. On-screen text overlays (what appears as text during the video)
+4. Carousel copy (repurposed as swipeable slides)
 
-VOICE RULES:
+STRICT SCRIPT LENGTH: Every "script" field must be exactly 110–140 words. Count every word.
+At 3 words/sec energetic pace = 37–47 seconds. Never exceed 140 words in the script field.
+
+VOICE RULES (applies to script field):
 - Hook lands in the FIRST word or first phrase — not "In this video" or "Hey guys"
-- Write exactly what is spoken — no emojis, no bullet symbols, no markdown, no stage directions
-- Zero filler openers: never start with "So", "Today", "Welcome", "I wanted to", "In this video"
-- Every script is complete and standalone — full value delivered in under 50 seconds
+- Write exactly what is spoken — no emojis, no bullets, no markdown, no stage directions
+- Zero filler openers: never start with "So", "Today", "Welcome", "I wanted to"
+- Every script is complete and standalone — full value in under 50 seconds
 - CTAs are earned and natural, never salesy
-- Use the client's exact tone and vocabulary — not generic creator speak
+- Match the client's exact tone and vocabulary
 
 CONTENT QUALITY:
-- Every script must be 100% grounded in the current best practices and content patterns for this niche
-- Scripts should feel like they come from the most credible, authoritative voice in this niche
+- 100% grounded in current best practices and content patterns for this niche
 - Deliver one clear, memorable idea per script — no rambling, no padding`;
 
   const user = `Generate ${count} ${platformLabel} scripts for ${persona.name || 'this client'}. Week of ${today}.${batchNote}
@@ -213,16 +218,40 @@ SCRIPT REQUIREMENTS:
 - Script body: EXACTLY 110–140 words. Count every word before finalising.
 - No two scripts should share the same topic or format
 
-Return ONLY a JSON array of exactly ${count} objects. No markdown, no preamble:
+Return ONLY a JSON array of exactly ${count} objects. No markdown, no preamble, no extra keys:
 [
   {
     "platform": "${platform}",
     "topic": "specific topic, 5–10 words",
     "type": "Value" | "Education" | "Entertainment" | "Soft Sell",
     "format": "exact format name from the list above",
-    "hookA": "first hook — the full opening line exactly as spoken",
-    "hookB": "second hook — different opening angle, same body",
-    "script": "full script body, EXACTLY 110–140 words, natural spoken language",
+    "hookA": "first hook — full opening line exactly as spoken",
+    "hookB": "second hook — different opening angle, same script body",
+    "script": "EXACTLY 110–140 words of natural spoken language — count every word",
+    "outline": [
+      "Talking point 1 — the opening claim/hook idea (phrase, not sentence)",
+      "Talking point 2 — first supporting argument or example",
+      "Talking point 3 — second supporting point or contrast",
+      "Talking point 4 — the payoff or insight",
+      "Talking point 5 — transition to CTA"
+    ],
+    "screenText": [
+      "Opening: bold 2–5 word hook text that appears in first 2 seconds",
+      "Mid: short punchy claim or stat (shown mid-video)",
+      "Mid: another key line from the script (2–5 words)",
+      "Close: CTA text shown at end"
+    ],
+    "carousel": {
+      "cover": "Bold cover headline, 5–8 words maximum",
+      "slides": [
+        { "headline": "Slide 1 headline (short)", "body": "1–2 sentences of value — can be read in 5 seconds" },
+        { "headline": "Slide 2 headline", "body": "..." },
+        { "headline": "Slide 3 headline", "body": "..." },
+        { "headline": "Slide 4 headline", "body": "..." },
+        { "headline": "Slide 5 headline", "body": "..." }
+      ],
+      "cta": "Final slide CTA text — what to do next (1 sentence)"
+    },
     "ctaA": "primary CTA as spoken (1 sentence)",
     "ctaB": "secondary / softer CTA as spoken (1 sentence)"
   }
