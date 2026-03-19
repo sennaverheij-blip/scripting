@@ -6,10 +6,12 @@
 // ─── STATE ─────────────────────────────────────────────────────────────────────
 let activeView        = 'clients';
 let libFilters        = { platform: 'all', type: 'all', personaId: 'all' };
+let libViewMode       = 'grid';   // 'grid' | 'week'
 let libSearch         = '';
 let selectedPersonaId = null;   // selected in generate view
 let editingPersonaId  = null;   // persona being edited in the form
 let currentResearch   = null;   // research results from last run
+let genDays           = 5;      // posting days per week for generation
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -321,8 +323,8 @@ function showGenerateConfig() {
     <button class="sel-bar-change" id="change-client-btn">Change</button>
   `;
 
-  $('gen-count').value = String(p.scriptsPerWeek || 8);
   show('gen-step-config');
+  updateScriptsCalc(p);
 
   $('change-client-btn').addEventListener('click', () => {
     selectedPersonaId = null;
@@ -331,11 +333,38 @@ function showGenerateConfig() {
   });
 }
 
+function updateScriptsCalc(persona) {
+  const p = persona || getPersona(selectedPersonaId);
+  if (!p) return;
+  const platforms = [
+    p.platforms?.tiktok !== false && 'TikTok',
+    p.platforms?.instagram !== false && 'Instagram',
+  ].filter(Boolean);
+  const numPlatforms = platforms.length || 2;
+  const total = 3 * numPlatforms * genDays;
+  const calcEl = $('scripts-calc-bar');
+  if (calcEl) {
+    calcEl.innerHTML =
+      `3 scripts &times; ${numPlatforms} platform${numPlatforms > 1 ? 's' : ''} &times; ${genDays} days = <strong>${total} scripts</strong>` +
+      `<span class="calc-duration">≈ 40–50 sec each</span>`;
+  }
+}
+
 function bindGenerateView() {
   $('gen-go-create')?.addEventListener('click', e => {
     e.preventDefault();
     openClientForm(null);
     switchView('clients');
+  });
+
+  // Days toggle buttons
+  document.querySelectorAll('.days-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.days-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      genDays = parseInt(btn.dataset.days);
+      updateScriptsCalc();
+    });
   });
 
   $('generate-btn').addEventListener('click', startGeneration);
@@ -376,50 +405,66 @@ async function startGeneration() {
   const persona = getPersona(selectedPersonaId);
   if (!persona) return;
 
-  const count = parseInt($('gen-count').value) || 8;
   const weekLabel = $('gen-week').value.trim();
 
-  // UI: enter loading state
+  // Build platforms list from persona preferences
+  const platforms = [
+    persona.platforms?.tiktok !== false && 'tiktok',
+    persona.platforms?.instagram !== false && 'instagram',
+  ].filter(Boolean);
+  if (!platforms.length) platforms.push('tiktok', 'instagram');
+
+  const config = { platforms, days: genDays };
+  const totalScripts = 3 * platforms.length * genDays;
+
+  // ── Enter loading state ───────────────────────────────────────────────────
   hide('gen-step-config');
   hide('gen-success');
   hide('gen-error');
   hide('gen-research-panel');
   show('gen-progress');
-
   $('generate-btn').disabled = true;
 
+  // Build dynamic progress steps
+  const totalBatches = platforms.reduce((s, _) => s + Math.ceil((3 * genDays) / 10), 0);
+  renderProgressSteps(platforms, genDays);
   setProgressStep('prog-research', 'active');
-  setProgressStep('prog-generate', 'pending');
-  setProgressStep('prog-save',     'pending');
 
   currentResearch = null;
+  let batchsDone = 0;
 
   try {
     const { research, scripts } = await runContentAgent(
       persona,
-      count,
+      config,
       apiKey,
       status => { $('progress-status').textContent = status; },
-      research => {
-        currentResearch = research;
+      // onResearch callback
+      r => {
+        currentResearch = r;
         setProgressStep('prog-research', 'done');
-        setProgressStep('prog-generate', 'active');
-        renderResearchSummary(research);
+        setProgressStep('prog-gen-0', 'active');
+        renderResearchSummary(r);
         show('gen-research-panel');
+      },
+      // onProgress callback (completedBatches, totalBatches)
+      (done, total) => {
+        batchsDone = done;
+        // Mark batch steps
+        for (let i = 0; i < done - 1; i++) setProgressStep(`prog-gen-${i}`, 'done');
+        setProgressStep(`prog-gen-${done - 1}`, 'done');
+        if (done < total) setProgressStep(`prog-gen-${done}`, 'active');
+        else setProgressStep('prog-save', 'active');
       },
     );
 
-    setProgressStep('prog-generate', 'done');
-    setProgressStep('prog-save',     'active');
-
-    // Save to library
+    setProgressStep('prog-save', 'done');
     saveScriptsForPersona(persona.id, scripts, weekLabel);
 
-    setProgressStep('prog-save', 'done');
-
     hide('gen-progress');
+    const days  = [...new Set(scripts.map(s => s.day))].length;
     $('gen-success-msg').textContent =
-      `${scripts.length} scripts generated and saved to your library.`;
+      `${scripts.length} scripts generated — 3 per platform per day across ${days} days. Saved to library.`;
     show('gen-success');
 
     renderLibrary();
@@ -433,6 +478,39 @@ async function startGeneration() {
   } finally {
     $('generate-btn').disabled = false;
   }
+}
+
+function renderProgressSteps(platforms, days) {
+  const stepsEl = $('progress-steps-list');
+  if (!stepsEl) return;
+
+  const steps = [
+    { id: 'prog-research', label: 'Deep research: niche trends & best practices' },
+  ];
+
+  platforms.forEach((p, pi) => {
+    const label = p === 'tiktok' ? 'TikTok' : 'Instagram';
+    const scriptsForPlatform = 3 * days;
+    const numBatches = Math.ceil(scriptsForPlatform / 10);
+    for (let b = 0; b < numBatches; b++) {
+      const globalIdx = pi * numBatches + b;
+      const rem = scriptsForPlatform - b * 10;
+      const cnt = Math.min(10, rem);
+      steps.push({
+        id: `prog-gen-${globalIdx}`,
+        label: `${label}: generate ${cnt} scripts (batch ${b + 1}/${numBatches})`,
+      });
+    }
+  });
+
+  steps.push({ id: 'prog-save', label: 'Save to library' });
+
+  stepsEl.innerHTML = steps.map(s => `
+    <div class="prog-step pending" id="${s.id}">
+      <div class="prog-dot"></div>
+      <span>${s.label}</span>
+    </div>
+  `).join('');
 }
 
 function resetGenerateView() {
@@ -495,7 +573,6 @@ function researchList(title, items) {
 
 // ─── LIBRARY ──────────────────────────────────────────────────────────────────
 function bindLibrary() {
-  // Platform & type filter buttons (in library view)
   document.querySelectorAll('#view-library .filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const group = btn.dataset.group;
@@ -507,7 +584,6 @@ function bindLibrary() {
     });
   });
 
-  // Search
   const searchInput = $('searchInput');
   let debounce;
   searchInput.addEventListener('input', () => {
@@ -519,6 +595,16 @@ function bindLibrary() {
   });
 
   $('lib-go-generate').addEventListener('click', () => switchView('generate'));
+
+  // View mode toggle
+  document.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      libViewMode = btn.dataset.mode;
+      renderLibrary();
+    });
+  });
 }
 
 function renderLibrary() {
@@ -569,57 +655,168 @@ function renderLibrary() {
   }
 
   hide('lib-empty');
-  grid.innerHTML = filtered.map((s, idx) => {
-    const platformCls = s.platform;
-    const typeCls     = s.type.toLowerCase().replace(' ', '-');
-    const wordCount   = s.script ? s.script.split(/\s+/).length : 0;
-    const duration    = Math.round(wordCount / 2.5);
-    const preview     = s.script ? s.script.substring(0, 150) + '...' : '';
-    const personaName = personas.find(p => p.id === s.personaId)?.name || '';
 
-    return `
-      <div class="script-card" data-idx="${idx}">
-        <div class="card-header">
-          <span class="card-number">${String(s.number || idx + 1).padStart(2, '0')}</span>
-          <div class="card-badges">
-            ${personaName ? `<span class="client-meta-tag" style="font-size:0.65rem">${esc(personaName)}</span>` : ''}
-            <span class="platform-badge ${platformCls}">${s.platform === 'tiktok' ? 'TikTok' : 'IG Reel'}</span>
-            <span class="type-badge ${typeCls}">${s.type}</span>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="card-topic">${esc(s.topic || '')}</div>
-          <div class="card-format">${esc(s.format || '')}</div>
-          <div class="card-hook">"${esc(s.hookA || '')}"</div>
-          <div class="card-preview">${esc(preview)}</div>
-        </div>
-        <div class="card-footer">
-          <span class="word-count">${wordCount} words · ~${duration}s</span>
-          <div class="card-actions">
-            <button class="action-btn copy-hook-btn"
-              data-hook="${escAttr(s.hookA || '')}"
-              onclick="event.stopPropagation()">Copy Hook</button>
-            <button class="action-btn copy-script-btn"
-              data-script="${escAttr(s.script || '')}"
-              onclick="event.stopPropagation()">Copy Script</button>
-          </div>
+  if (libViewMode === 'week') {
+    renderWeekView(filtered, personas);
+  } else {
+    renderGridView(filtered, personas);
+  }
+}
+
+function renderGridView(filtered, personas) {
+  const grid = $('scriptsGrid');
+  grid.className = 'scripts-grid';
+  grid.innerHTML = filtered.map((s, idx) => scriptCardHtml(s, idx, personas)).join('');
+  bindCardEvents(grid, filtered);
+}
+
+function scriptCardHtml(s, idx, personas) {
+  const platformCls = s.platform;
+  const typeCls     = s.type.toLowerCase().replace(' ', '-');
+  const wordCount   = s.script ? s.script.split(/\s+/).length : 0;
+  // 3 words/sec = energetic TikTok pace → target 37-47 sec
+  const duration    = Math.round(wordCount / 3);
+  const preview     = s.script ? s.script.substring(0, 150) + '...' : '';
+  const personaName = personas.find(p => p.id === s.personaId)?.name || '';
+  const dayLabel    = s.day ? `<span class="client-meta-tag" style="font-size:0.65rem">${s.day} · #${s.slot}</span>` : '';
+
+  return `
+    <div class="script-card" data-idx="${idx}">
+      <div class="card-header">
+        <span class="card-number">${String(s.number || idx + 1).padStart(2, '0')}</span>
+        <div class="card-badges">
+          ${dayLabel}
+          ${personaName ? `<span class="client-meta-tag" style="font-size:0.65rem">${esc(personaName)}</span>` : ''}
+          <span class="platform-badge ${platformCls}">${s.platform === 'tiktok' ? 'TikTok' : 'IG Reel'}</span>
+          <span class="type-badge ${typeCls}">${s.type}</span>
         </div>
       </div>
-    `;
-  }).join('');
+      <div class="card-body">
+        <div class="card-topic">${esc(s.topic || '')}</div>
+        <div class="card-format">${esc(s.format || '')}</div>
+        <div class="card-hook">"${esc(s.hookA || '')}"</div>
+        <div class="card-preview">${esc(preview)}</div>
+      </div>
+      <div class="card-footer">
+        <span class="word-count">${wordCount} words · ~${duration}s</span>
+        <div class="card-actions">
+          <button class="action-btn copy-hook-btn"
+            data-hook="${escAttr(s.hookA || '')}"
+            onclick="event.stopPropagation()">Copy Hook</button>
+          <button class="action-btn copy-script-btn"
+            data-script="${escAttr(s.script || '')}"
+            onclick="event.stopPropagation()">Copy Script</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
-  // Card click → modal
-  grid.querySelectorAll('.script-card').forEach((card, idx) => {
-    card.addEventListener('click', () => openScriptModal(filtered[idx]));
+function bindCardEvents(container, scripts) {
+  container.querySelectorAll('.script-card').forEach((card, idx) => {
+    card.addEventListener('click', () => openScriptModal(scripts[idx]));
   });
-
-  // Copy buttons
-  grid.querySelectorAll('.copy-hook-btn').forEach(btn => {
+  container.querySelectorAll('.copy-hook-btn').forEach(btn => {
     btn.addEventListener('click', () => copyText(btn, btn.dataset.hook));
   });
-  grid.querySelectorAll('.copy-script-btn').forEach(btn => {
+  container.querySelectorAll('.copy-script-btn').forEach(btn => {
     btn.addEventListener('click', () => copyText(btn, btn.dataset.script));
   });
+}
+
+// ─── WEEK VIEW ─────────────────────────────────────────────────────────────────
+function renderWeekView(filtered, personas) {
+  const grid = $('scriptsGrid');
+  grid.className = 'week-view-grid';
+
+  // Find all unique days in the scripts
+  const allDays = [...new Set(filtered.map(s => s.day).filter(Boolean))];
+  // Sort by WEEK_DAYS order (from agent.js, but we can replicate)
+  const dayOrder = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const days = dayOrder.filter(d => allDays.includes(d));
+
+  // If no day data, fall back to grid view
+  if (!days.length) {
+    renderGridView(filtered, personas);
+    return;
+  }
+
+  const platforms = ['tiktok', 'instagram'].filter(p => filtered.some(s => s.platform === p));
+
+  // Build a lookup: day → platform → slot → script
+  const byDayPlatformSlot = {};
+  filtered.forEach(s => {
+    if (!s.day) return;
+    if (!byDayPlatformSlot[s.day]) byDayPlatformSlot[s.day] = {};
+    if (!byDayPlatformSlot[s.day][s.platform]) byDayPlatformSlot[s.day][s.platform] = {};
+    byDayPlatformSlot[s.day][s.platform][s.slot || 1] = s;
+  });
+
+  // Collect ALL filtered scripts in order for click-index mapping
+  const orderedScripts = [];
+
+  let html = `
+    <div class="week-header">
+      <div class="week-platform-label"></div>
+      ${days.map(d => `<div class="week-day-label">${d}</div>`).join('')}
+    </div>
+  `;
+
+  platforms.forEach(platform => {
+    const platLabel = platform === 'tiktok' ? 'TikTok' : 'IG Reel';
+    const platCls   = platform;
+
+    html += `<div class="week-platform-row">
+      <div class="week-platform-label"><span class="platform-badge ${platCls}">${platLabel}</span></div>`;
+
+    // 3 slots per day
+    for (let slot = 1; slot <= 3; slot++) {
+      if (slot === 1) {
+        // Start a new row group (the 3 slots stacked within each day)
+      }
+    }
+
+    // We'll render slot by slot as rows
+    html += `<div class="week-slots-group">`;
+    for (let slot = 1; slot <= 3; slot++) {
+      html += `<div class="week-slot-row">
+        <div class="week-slot-label">#${slot}</div>`;
+
+      days.forEach(day => {
+        const s = byDayPlatformSlot[day]?.[platform]?.[slot];
+        if (s) {
+          const scriptIdx = orderedScripts.length;
+          orderedScripts.push(s);
+          const wordCount = s.script ? s.script.split(/\s+/).length : 0;
+          const duration  = Math.round(wordCount / 3);
+          const typeCls   = s.type.toLowerCase().replace(' ', '-');
+          html += `
+            <div class="week-script-cell script-card" data-idx="${scriptIdx}">
+              <div class="week-cell-type"><span class="type-badge ${typeCls}">${s.type}</span></div>
+              <div class="week-cell-format">${esc(s.format || '')}</div>
+              <div class="week-cell-hook">"${esc(s.hookA || '')}"</div>
+              <div class="week-cell-meta">${wordCount}w · ~${duration}s</div>
+              <div class="week-cell-actions">
+                <button class="action-btn copy-hook-btn" data-hook="${escAttr(s.hookA || '')}" onclick="event.stopPropagation()">Hook</button>
+                <button class="action-btn copy-script-btn" data-script="${escAttr(s.script || '')}" onclick="event.stopPropagation()">Script</button>
+              </div>
+            </div>`;
+        } else {
+          html += `<div class="week-script-cell week-cell-empty">—</div>`;
+        }
+      });
+
+      html += `</div>`; // week-slot-row
+    }
+    html += `</div>`; // week-slots-group
+
+    html += `</div>`; // week-platform-row
+  });
+
+  grid.innerHTML = html;
+
+  // Bind events using orderedScripts
+  bindCardEvents(grid, orderedScripts);
 }
 
 function renderPersonaFilters(personas) {
@@ -662,7 +859,7 @@ function openScriptModal(script) {
   const platformCls = script.platform;
   const typeCls     = script.type.toLowerCase().replace(' ', '-');
   const wordCount   = script.script ? script.script.split(/\s+/).length : 0;
-  const duration    = Math.round(wordCount / 2.5);
+  const duration    = Math.round(wordCount / 3); // 3 words/sec energetic pace
 
   $('modalBody').innerHTML = `
     <div class="modal-meta">

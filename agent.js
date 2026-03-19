@@ -1,10 +1,16 @@
 /**
  * agent.js
- * Claude API integration — research phase + content generation phase.
+ * Claude API integration — deep research phase + batched script generation.
+ *
+ * Script target: 110–140 words = ~37–47 seconds at a natural energetic pace (3 words/sec).
  */
 
 const CLAUDE_API   = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
+const BATCH_SIZE   = 10;   // max scripts per API call
+
+// Weekday labels used for day assignment
+const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 // ─── LOW-LEVEL API CALL ────────────────────────────────────────────────────────
 async function callClaude(systemPrompt, userMessage, apiKey) {
@@ -26,10 +32,7 @@ async function callClaude(systemPrompt, userMessage, apiKey) {
 
   if (!res.ok) {
     let msg = `API error ${res.status}`;
-    try {
-      const err = await res.json();
-      msg = err?.error?.message || msg;
-    } catch {}
+    try { const e = await res.json(); msg = e?.error?.message || msg; } catch {}
     throw new Error(msg);
   }
 
@@ -37,102 +40,129 @@ async function callClaude(systemPrompt, userMessage, apiKey) {
   return data.content[0].text;
 }
 
-// ─── JSON EXTRACT ──────────────────────────────────────────────────────────────
-// Strips markdown fences and parses JSON from Claude's response.
+// Strip markdown fences and parse JSON from Claude's response
 function extractJson(raw) {
-  let clean = raw.trim();
-  // Remove ```json ... ``` or ``` ... ``` fences
-  clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  let clean = raw.trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/, '')
+    .trim();
   return JSON.parse(clean);
 }
 
-// ─── PHASE 1: NICHE RESEARCH ──────────────────────────────────────────────────
+// ─── PHASE 1: DEEP NICHE RESEARCH ─────────────────────────────────────────────
 async function researchNiche(persona, apiKey, onStatus) {
-  onStatus('Researching trends in: ' + persona.niche + '...');
+  onStatus('Researching current best practices for: ' + persona.niche + '...');
 
   const today = new Date().toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
 
-  const system = `You are an expert social media content strategist and analyst who specialises in short-form video on TikTok and Instagram Reels. You have deep knowledge of what content formats, hooks, topics and angles drive real results across every niche.
+  const system = `You are a senior short-form video content strategist who has analysed thousands of viral TikTok and Instagram Reels accounts across every niche. You have direct, current knowledge of what separates content that gets 10k views from content that gets 10M views.
 
-Today's date: ${today}.
+Today is ${today}.
 
-Your research is grounded in observable content patterns: what hooks stop people from scrolling, what formats drive saves and shares, what pain points resonate right now, and what angles position a service compellingly.`;
+Your analysis must be SPECIFIC and ACTIONABLE — not generic best practices but actual patterns that are working RIGHT NOW in the specific niche you are given. Every insight you provide must be something a creator could act on immediately to make better-performing content.`;
 
-  const user = `Research the current content landscape for the following client and niche. Identify the best opportunities for this week's short-form video content.
+  const user = `Conduct a deep, current content strategy analysis for this niche and client.
 
-CLIENT NICHE: ${persona.niche}
+NICHE: ${persona.niche}
 
 ICP PROFILE:
-${persona.icpDoc || '(Not provided — infer from the niche.)'}
+${persona.icpDoc || '(Infer from niche — describe the exact person this content is for)'}
 
-OFFER:
-${persona.offerDoc || '(Not provided — infer from the niche.)'}
+OFFER / SERVICES:
+${persona.offerDoc || '(Infer from niche — what problem is being solved)'}
 
-Based on proven content patterns and current trends for this niche on TikTok and Instagram Reels, identify:
+Analyse the following dimensions deeply and specifically:
 
-1. The 5–7 topic categories getting the most traction right now
-2. The 4–6 best-performing content formats with a brief note on why each works
-3. The top 5–6 pain points or frustrations the ICP is actively voicing
-4. 4–6 strong content angles that position the offer compellingly
-5. Platform-specific insights: what works on TikTok vs Instagram Reels for this niche
-6. A short strategic summary (2–3 sentences) for this week's content direction
+1. WHAT IS WORKING RIGHT NOW (top 6–8 topic categories getting real traction in this niche on TikTok/Reels at this moment — be specific, not generic)
 
-Return ONLY a JSON object in exactly this shape — no markdown, no extra keys:
+2. HOOK STRUCTURES THAT STOP THE SCROLL (4–6 proven hook patterns with specific language examples — the exact opening moves that are getting clicks right now in this niche)
+
+3. CONTENT FORMATS DOMINATING THIS NICHE (4–6 specific formats with explanation of why they outperform — include format mechanics, not just names)
+
+4. PAIN POINTS BEING ACTIVELY VOICED (6–8 frustrations, fears, or failures the ICP is searching, commenting, and creating content about right now — specific language they use)
+
+5. CONTENT ANGLES THAT POSITION THE OFFER (4–6 angles that create genuine demand for the service without sounding like an ad)
+
+6. WHAT IS OVERSATURATED / WHAT TO AVOID (3–4 content types or topics that are overdone and will underperform — what top creators have moved away from)
+
+7. PLATFORM-SPECIFIC SIGNALS (what is the TikTok algorithm rewarding right now for this niche vs Instagram Reels — specific signals, completion triggers, format preferences)
+
+8. CONTENT GAPS AND OPPORTUNITIES (2–3 underserved angles that the ICP wants but isn't getting — these become differentiated content)
+
+9. WEEKLY STRATEGY SUMMARY (2–3 sentences: what is the single most important strategic direction for this week's content based on all the above)
+
+Return ONLY a JSON object. No markdown, no preamble, no extra keys:
 {
-  "trendingTopics": ["...", "..."],
-  "bestFormats": [
-    { "name": "...", "why": "...", "exampleHook": "..." }
+  "trendingTopics": ["specific topic 1", "specific topic 2", ...],
+  "hookStructures": [
+    { "pattern": "hook pattern name", "example": "full example opening line as spoken", "why": "why this stops scroll" }
   ],
-  "painPoints": ["...", "..."],
-  "contentAngles": ["...", "..."],
+  "bestFormats": [
+    { "name": "format name", "mechanics": "how this format actually works step by step", "why": "why it outperforms" }
+  ],
+  "painPoints": ["specific pain point with the language the ICP uses", ...],
+  "contentAngles": ["angle 1", "angle 2", ...],
+  "avoid": ["what to avoid 1", ...],
   "platformInsights": {
-    "tiktok": ["...", "..."],
-    "instagram": ["...", "..."]
+    "tiktok": ["specific signal or behaviour", ...],
+    "instagram": ["specific signal or behaviour", ...]
   },
-  "summary": "..."
+  "contentGaps": ["underserved angle 1", ...],
+  "summary": "2–3 sentence strategic direction for this week"
 }`;
 
   const raw = await callClaude(system, user, apiKey);
   return extractJson(raw);
 }
 
-// ─── PHASE 2: SCRIPT GENERATION ───────────────────────────────────────────────
-async function generateScripts(persona, research, count, apiKey, onStatus) {
-  onStatus('Generating ' + count + ' scripts...');
-
+// ─── PHASE 2: BATCH SCRIPT GENERATION ─────────────────────────────────────────
+/**
+ * Generate one batch of scripts for a single platform.
+ *
+ * @param {string} platform    - 'tiktok' or 'instagram'
+ * @param {number} count       - number of scripts in this batch
+ * @param {number} batchIndex  - 0-based batch index (used to vary topics)
+ * @param {number} totalBatches- total batches for this platform
+ * @param {Object} persona
+ * @param {Object} research
+ * @param {string} apiKey
+ */
+async function generateBatch(platform, count, batchIndex, totalBatches, persona, research, apiKey) {
   const today = new Date().toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
   });
 
-  // Build platform split from persona preferences
-  const platforms = [];
-  if (persona.platforms?.tiktok !== false) platforms.push('tiktok');
-  if (persona.platforms?.instagram !== false) platforms.push('instagram');
-  if (!platforms.length) platforms.push('tiktok', 'instagram');
+  const platformLabel = platform === 'tiktok' ? 'TikTok' : 'Instagram Reels';
 
-  const half = Math.floor(count / 2);
-  const tiktokCount = platforms.includes('tiktok') && platforms.includes('instagram')
-    ? half
-    : platforms.includes('tiktok') ? count : 0;
-  const igCount = count - tiktokCount;
-
-  // Content type distribution (roughly 35% value, 25% education, 25% entertainment, 15% soft sell)
+  // Distribute content types across batches
   const typeDistribution = buildTypeDistribution(count);
 
-  const system = `You are an expert short-form video scriptwriter who specialises in ${persona.niche}. You write punchy, natural-sounding spoken-word scripts that drive real business results.
+  // Tell subsequent batches to use different topics to avoid repetition
+  const batchNote = totalBatches > 1
+    ? `\nIMPORTANT: This is batch ${batchIndex + 1} of ${totalBatches} for ${platformLabel}. Use DIFFERENT topics and formats from earlier batches — no repeated angles.`
+    : '';
 
-Core writing rules:
-- The hook must land in the FIRST word or first few words — not "In this video I'll show you" but the real opening line
-- Scripts are spoken out loud — no emojis, no bullet symbols, no markdown. Write exactly what the creator will say.
-- 150–260 words per script body (approximately 60–90 seconds spoken at a natural pace)
-- Never use filler openers: "In today's video", "Hey guys", "Welcome back", "So I wanted to talk about"
-- Each script must feel complete and standalone — a viewer who sees only this video must get full value
-- CTAs should feel natural and earned, not salesy or forced
-- Match the client's exact tone of voice and vocabulary`;
+  const system = `You are an elite short-form video scriptwriter specialised in ${persona.niche} for ${platformLabel}.
 
-  const user = `Generate ${count} short-form video scripts for the following client. Date: ${today}.
+STRICT LENGTH RULE: Every script body must be exactly 110–140 words. Count carefully.
+At a natural energetic pace (3 words per second), 110–140 words = 37–47 seconds — safely under 60 seconds.
+
+VOICE RULES:
+- Hook lands in the FIRST word or first phrase — not "In this video" or "Hey guys"
+- Write exactly what is spoken — no emojis, no bullet symbols, no markdown, no stage directions
+- Zero filler openers: never start with "So", "Today", "Welcome", "I wanted to", "In this video"
+- Every script is complete and standalone — full value delivered in under 50 seconds
+- CTAs are earned and natural, never salesy
+- Use the client's exact tone and vocabulary — not generic creator speak
+
+CONTENT QUALITY:
+- Every script must be 100% grounded in the current best practices and content patterns for this niche
+- Scripts should feel like they come from the most credible, authoritative voice in this niche
+- Deliver one clear, memorable idea per script — no rambling, no padding`;
+
+  const user = `Generate ${count} ${platformLabel} scripts for ${persona.name || 'this client'}. Week of ${today}.${batchNote}
 
 CLIENT: ${persona.name || 'Client'}
 NICHE: ${persona.niche}
@@ -144,36 +174,59 @@ OFFER / SERVICES:
 ${persona.offerDoc || 'Focus on helping the ICP solve their core problem.'}
 
 TONE OF VOICE:
-${persona.toneDoc || 'Direct, no-fluff, confident but not arrogant. Speaks to practitioners, not beginners. No buzzwords.'}
+${persona.toneDoc || 'Direct, no-fluff, confident not arrogant. Speaks to practitioners not beginners. No buzzwords.'}
 
-─── RESEARCH FOR THIS WEEK ───
-Trending Topics: ${research.trendingTopics?.join(' | ')}
-Best Formats: ${research.bestFormats?.map(f => f.name).join(' | ')}
-Key Pain Points: ${research.painPoints?.join(' | ')}
-Content Angles: ${research.contentAngles?.join(' | ')}
-TikTok Insights: ${research.platformInsights?.tiktok?.join(' | ')}
-Instagram Insights: ${research.platformInsights?.instagram?.join(' | ')}
-Strategy Summary: ${research.summary}
-─────────────────────────────
+━━━ CURRENT RESEARCH INTELLIGENCE ━━━
+TRENDING TOPICS RIGHT NOW:
+${research.trendingTopics?.join('\n')}
 
-SCRIPT MIX:
-- ${tiktokCount > 0 ? tiktokCount + ' TikTok scripts' : ''}${tiktokCount > 0 && igCount > 0 ? ' + ' : ''}${igCount > 0 ? igCount + ' Instagram Reels scripts' : ''}
+HIGH-PERFORMING HOOK STRUCTURES:
+${research.hookStructures?.map(h => `• ${h.pattern}: "${h.example}"`).join('\n')}
+
+BEST-PERFORMING FORMATS:
+${research.bestFormats?.map(f => `• ${f.name}: ${f.mechanics}`).join('\n')}
+
+KEY PAIN POINTS (ICP language):
+${research.painPoints?.join('\n')}
+
+CONTENT ANGLES:
+${research.contentAngles?.join('\n')}
+
+CONTENT GAPS (underserved — opportunity):
+${research.contentGaps?.join('\n')}
+
+${platformLabel.toUpperCase()} PLATFORM SIGNALS:
+${(platform === 'tiktok' ? research.platformInsights?.tiktok : research.platformInsights?.instagram)?.join('\n')}
+
+WHAT TO AVOID:
+${research.avoid?.join('\n')}
+
+STRATEGY THIS WEEK: ${research.summary}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SCRIPT REQUIREMENTS:
+- Platform: ${platformLabel} ONLY
+- Count: exactly ${count} scripts
 - Type distribution: ${typeDistribution.join(', ')}
-- Formats to use (mix them up): Problem-Solution, Contrarian Take, Unfiltered Rant, Step-by-Step Walkthrough, 3 Mistakes List, Authority Callout, Quiet Flex / Calm Authority, Transformation Before-After
-- Each script needs TWO hook variants (hookA and hookB) — different opening angles for the same script body, so the creator can A/B test
+- Formats to use (vary them): Problem-Solution, Contrarian Take, Unfiltered Rant, Step-by-Step Walkthrough, 3 Mistakes List, Authority Callout, Quiet Flex / Calm Authority, Transformation Before-After, Hot Take, Pattern Interrupt
+- Each script needs TWO hook variants (hookA and hookB) — different angles, same body
+- Script body: EXACTLY 110–140 words. Count every word before finalising.
+- No two scripts should share the same topic or format
 
-Return ONLY a JSON array of exactly ${count} objects. No markdown, no extra text. Each object:
-{
-  "platform": "tiktok" or "instagram",
-  "topic": "specific topic of this script in plain language",
-  "type": "Value" or "Education" or "Entertainment" or "Soft Sell",
-  "format": "exact format name",
-  "hookA": "first hook variant — full opening line as spoken",
-  "hookB": "second hook variant — different angle, same script body",
-  "script": "full script body (150–260 words, natural spoken language, no emojis)",
-  "ctaA": "primary call to action as spoken",
-  "ctaB": "secondary / softer call to action as spoken"
-}`;
+Return ONLY a JSON array of exactly ${count} objects. No markdown, no preamble:
+[
+  {
+    "platform": "${platform}",
+    "topic": "specific topic, 5–10 words",
+    "type": "Value" | "Education" | "Entertainment" | "Soft Sell",
+    "format": "exact format name from the list above",
+    "hookA": "first hook — the full opening line exactly as spoken",
+    "hookB": "second hook — different opening angle, same body",
+    "script": "full script body, EXACTLY 110–140 words, natural spoken language",
+    "ctaA": "primary CTA as spoken (1 sentence)",
+    "ctaB": "secondary / softer CTA as spoken (1 sentence)"
+  }
+]`;
 
   const raw = await callClaude(system, user, apiKey);
   return extractJson(raw);
@@ -181,39 +234,106 @@ Return ONLY a JSON array of exactly ${count} objects. No markdown, no extra text
 
 // ─── HELPER: TYPE DISTRIBUTION ─────────────────────────────────────────────────
 function buildTypeDistribution(count) {
-  // ~35% value, ~25% education, ~25% entertainment, ~15% soft sell
+  const softSell    = Math.max(1, Math.round(count * 0.15));
+  const value       = Math.round(count * 0.37);
+  const education   = Math.round(count * 0.25);
+  const entertainment = Math.max(0, count - value - education - softSell);
   const dist = [];
-  const softSell = Math.max(1, Math.round(count * 0.15));
-  const value = Math.round(count * 0.35);
-  const education = Math.round(count * 0.25);
-  const entertainment = count - value - education - softSell;
-  if (value > 0) dist.push(`${value}x Value`);
-  if (education > 0) dist.push(`${education}x Education`);
+  if (value > 0)         dist.push(`${value}x Value`);
+  if (education > 0)     dist.push(`${education}x Education`);
   if (entertainment > 0) dist.push(`${entertainment}x Entertainment`);
-  if (softSell > 0) dist.push(`${softSell}x Soft Sell`);
+  if (softSell > 0)      dist.push(`${softSell}x Soft Sell`);
   return dist;
+}
+
+// ─── DAY / SLOT ASSIGNMENT ────────────────────────────────────────────────────
+/**
+ * Assigns day and slot to each script.
+ * Scripts are organized as 3 per platform per day.
+ *
+ * @param {Array}  scripts   - flat array, already split by platform
+ * @param {number} days      - number of posting days
+ * @returns the same array, mutated with .day and .slot
+ */
+function assignDaysAndSlots(scripts, days) {
+  const dayNames = WEEK_DAYS.slice(0, days);
+
+  // Group by platform
+  const byPlatform = {};
+  scripts.forEach(s => {
+    if (!byPlatform[s.platform]) byPlatform[s.platform] = [];
+    byPlatform[s.platform].push(s);
+  });
+
+  // Each platform: 3 scripts per day, rotating through dayNames
+  Object.values(byPlatform).forEach(platformScripts => {
+    platformScripts.forEach((s, i) => {
+      s.day  = dayNames[Math.floor(i / 3) % dayNames.length];
+      s.slot = (i % 3) + 1;
+    });
+  });
+
+  return scripts;
 }
 
 // ─── MAIN AGENT RUNNER ────────────────────────────────────────────────────────
 /**
- * Run the full two-phase content agent.
+ * Run the full content agent: research + batched generation per platform.
  *
- * @param {Object}   persona   - Persona object from localStorage
- * @param {number}   count     - Number of scripts to generate
- * @param {string}   apiKey    - Anthropic API key
- * @param {Function} onStatus  - Status callback (string)
- * @param {Function} onResearch - Called with research JSON after phase 1
+ * @param {Object}   persona     - Persona object
+ * @param {Object}   config      - { platforms: string[], days: number }
+ * @param {string}   apiKey
+ * @param {Function} onStatus    - status string callback
+ * @param {Function} onResearch  - called with research JSON after phase 1
+ * @param {Function} onProgress  - called with (completedBatches, totalBatches)
  *
  * @returns {{ research, scripts }}
  */
-async function runContentAgent(persona, count, apiKey, onStatus, onResearch) {
-  // Phase 1
+async function runContentAgent(persona, config, apiKey, onStatus, onResearch, onProgress) {
+  const { platforms, days } = config;
+  const scriptsPerPlatform  = 3 * days;
+
+  // ── Phase 1: Research ───────────────────────────────────────────────────────
   const research = await researchNiche(persona, apiKey, onStatus);
   if (onResearch) onResearch(research);
 
-  // Phase 2
-  const scripts = await generateScripts(persona, research, count, apiKey, onStatus);
+  // ── Phase 2: Generate per platform, in batches ──────────────────────────────
+  const allScripts  = [];
+  let completedBatches = 0;
+
+  // Pre-compute total batch count for progress tracking
+  const totalBatches = platforms.reduce((sum, _) => {
+    return sum + Math.ceil(scriptsPerPlatform / BATCH_SIZE);
+  }, 0);
+
+  for (const platform of platforms) {
+    const platformLabel = platform === 'tiktok' ? 'TikTok' : 'Instagram';
+    const numBatches    = Math.ceil(scriptsPerPlatform / BATCH_SIZE);
+
+    for (let b = 0; b < numBatches; b++) {
+      const remaining = scriptsPerPlatform - b * BATCH_SIZE;
+      const batchCount = Math.min(BATCH_SIZE, remaining);
+      const batchNum   = b + 1;
+
+      onStatus(
+        `Generating ${platformLabel} scripts — batch ${batchNum}/${numBatches} (${batchCount} scripts)...`
+      );
+
+      const scripts = await generateBatch(
+        platform, batchCount, b, numBatches,
+        persona, research, apiKey,
+      );
+
+      allScripts.push(...scripts);
+      completedBatches++;
+      if (onProgress) onProgress(completedBatches, totalBatches);
+    }
+  }
+
+  // ── Assign days and slots ────────────────────────────────────────────────────
+  onStatus('Organising weekly schedule...');
+  assignDaysAndSlots(allScripts, days);
 
   onStatus('Saving to library...');
-  return { research, scripts };
+  return { research, scripts: allScripts };
 }

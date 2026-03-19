@@ -193,19 +193,19 @@
         <div class="gen-card hidden" id="gen-step-config">
           <div class="gen-step-label">Step 2 — Configure</div>
           <div class="selected-client-bar" id="gen-selected-bar"></div>
+
           <div class="gen-config-row">
             <div class="form-group">
-              <label>Week label</label>
-              <input type="text" id="gen-week" class="form-input" placeholder="e.g. March 18, 2026">
+              <label>Posting days / week</label>
+              <div class="days-toggle">
+                <button class="days-btn" data-days="3">3 days</button>
+                <button class="days-btn active" data-days="5">5 days</button>
+                <button class="days-btn" data-days="7">7 days</button>
+              </div>
             </div>
             <div class="form-group">
-              <label>Scripts to generate</label>
-              <select id="gen-count" class="form-input form-select">
-                <option value="6">6 scripts</option>
-                <option value="8" selected>8 scripts</option>
-                <option value="10">10 scripts</option>
-                <option value="12">12 scripts</option>
-              </select>
+              <label>Week of</label>
+              <input type="text" id="gen-week" class="form-input" placeholder="e.g. March 18, 2026">
             </div>
             <div class="form-group">
               <label>&nbsp;</label>
@@ -215,6 +215,11 @@
               </button>
             </div>
           </div>
+
+          <div class="scripts-calc-bar" id="scripts-calc-bar">
+            3 scripts &times; 2 platforms &times; 5 days = <strong>30 scripts</strong>
+            <span class="calc-duration">≈ 40–50 sec each</span>
+          </div>
         </div>
 
         <!-- Progress -->
@@ -223,17 +228,18 @@
             <div class="spinner"></div>
             <div class="progress-text">
               <div class="progress-status" id="progress-status">Starting...</div>
-              <div class="progress-sub">This takes 30–60 seconds</div>
+              <div class="progress-sub">Takes 1–3 minutes depending on script count</div>
             </div>
           </div>
-          <div class="progress-steps">
+          <!-- Steps are dynamically rendered by JS into this container -->
+          <div class="progress-steps" id="progress-steps-list">
             <div class="prog-step pending" id="prog-research">
               <div class="prog-dot"></div>
-              <span>Research niche trends</span>
+              <span>Deep research: niche trends &amp; best practices</span>
             </div>
-            <div class="prog-step pending" id="prog-generate">
+            <div class="prog-step pending" id="prog-gen-0">
               <div class="prog-dot"></div>
-              <span>Generate scripts</span>
+              <span>Generate scripts...</span>
             </div>
             <div class="prog-step pending" id="prog-save">
               <div class="prog-dot"></div>
@@ -280,7 +286,13 @@
           <h2>Script Library</h2>
           <p class="view-subtitle">Browse, filter and copy your generated scripts</p>
         </div>
-        <div id="lib-stats" class="stats"></div>
+        <div class="lib-header-right">
+          <div id="lib-stats" class="stats"></div>
+          <div class="view-mode-toggle">
+            <button class="view-mode-btn active" data-mode="grid" title="Grid view">&#9783; Grid</button>
+            <button class="view-mode-btn" data-mode="week" title="Week view">&#9724; Week</button>
+          </div>
+        </div>
       </div>
 
       <!-- Filters -->
