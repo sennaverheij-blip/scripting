@@ -57,11 +57,16 @@ async function researchNiche(persona, apiKey, onStatus) {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
 
+  const language = persona.language || 'English';
+  const langNote = language !== 'English'
+    ? `\n\nLANGUAGE: Write all content values, examples, hook lines, pain points, and topic descriptions in ${language}. JSON keys must remain in English.`
+    : '';
+
   const system = `You are a senior short-form video content strategist who has analysed thousands of viral TikTok and Instagram Reels accounts across every niche. You have direct, current knowledge of what separates content that gets 10k views from content that gets 10M views.
 
 Today is ${today}.
 
-Your analysis must be SPECIFIC and ACTIONABLE — not generic best practices but actual patterns that are working RIGHT NOW in the specific niche you are given. Every insight you provide must be something a creator could act on immediately to make better-performing content.`;
+Your analysis must be SPECIFIC and ACTIONABLE — not generic best practices but actual patterns that are working RIGHT NOW in the specific niche you are given. Every insight you provide must be something a creator could act on immediately to make better-performing content.${langNote}`;
 
   const user = `Conduct a deep, current content strategy analysis for this niche and client.
 
@@ -135,6 +140,7 @@ async function generateBatch(platform, count, batchIndex, totalBatches, persona,
   });
 
   const platformLabel = platform === 'tiktok' ? 'TikTok' : 'Instagram Reels';
+  const language      = persona.language || 'English';
 
   // Distribute content types across batches
   const typeDistribution = buildTypeDistribution(count);
@@ -144,7 +150,11 @@ async function generateBatch(platform, count, batchIndex, totalBatches, persona,
     ? `\nIMPORTANT: This is batch ${batchIndex + 1} of ${totalBatches} for ${platformLabel}. Use DIFFERENT topics and formats from earlier batches — no repeated angles.`
     : '';
 
-  const system = `You are an elite short-form video scriptwriter and content strategist specialised in ${persona.niche} for ${platformLabel}.
+  const langInstruction = language !== 'English'
+    ? `\n\nLANGUAGE: Generate ALL content — scripts, hooks, outlines, on-screen text, carousel copy, and CTAs — in ${language}. Do not use English in any generated content field.`
+    : '';
+
+  const system = `You are an elite short-form video scriptwriter and content strategist specialised in ${persona.niche} for ${platformLabel}.${langInstruction}
 
 For each script you generate FOUR content formats from the same core idea:
 1. Full video script (spoken word)

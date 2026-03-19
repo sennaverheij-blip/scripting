@@ -12,6 +12,8 @@ let selectedPersonaId = null;   // selected in generate view
 let editingPersonaId  = null;   // persona being edited in the form
 let currentResearch   = null;   // research results from last run
 let genDays           = 5;      // posting days per week for generation
+let clientMode        = false;  // true when a client is logged into the portal
+let clientModeId      = null;   // persona id of logged-in client
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindLibrary();
   bindSettings();
   bindModal();
+  bindPortal();
   renderClients();
   renderLibrary();
   setWeekDefault();
@@ -69,6 +72,9 @@ function bindNav() {
 }
 
 function switchView(view) {
+  // In client mode only library is accessible
+  if (clientMode && view !== 'library') return;
+
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
@@ -122,6 +128,13 @@ function bindClientForm() {
     const el = $(id);
     if (el) el.addEventListener('input', () => updateCharCount(id));
   });
+
+  // PIN show/hide toggle
+  const pinToggle = $('f-pin-toggle');
+  const pinInput  = $('f-pin');
+  if (pinToggle && pinInput) {
+    pinToggle.addEventListener('click', () => togglePasswordField(pinInput, pinToggle));
+  }
 }
 
 function updateCharCount(fieldId) {
@@ -150,6 +163,8 @@ function openClientForm(personaId) {
     $('f-tiktok').checked = true;
     $('f-instagram').checked = true;
     $('f-count').value = '8';
+    $('f-language').value = 'English';
+    $('f-pin').value = '';
   } else {
     const p = getPersona(personaId);
     if (!p) return;
@@ -161,6 +176,8 @@ function openClientForm(personaId) {
     $('f-tiktok').checked = p.platforms?.tiktok !== false;
     $('f-instagram').checked = p.platforms?.instagram !== false;
     $('f-count').value = String(p.scriptsPerWeek || 8);
+    $('f-language').value = p.language || 'English';
+    $('f-pin').value = p.clientPin || '';
   }
 
   ['f-icp', 'f-offer', 'f-tone'].forEach(updateCharCount);
@@ -189,6 +206,8 @@ function saveClientForm() {
     toneDoc:        $('f-tone').value.trim(),
     platforms:      { tiktok: $('f-tiktok').checked, instagram: $('f-instagram').checked },
     scriptsPerWeek: parseInt($('f-count').value) || 8,
+    language:       $('f-language').value || 'English',
+    clientPin:      $('f-pin').value.trim() || null,
   };
 
   savePersona(persona);
@@ -239,6 +258,8 @@ function renderClients() {
         <div class="client-card-meta">
           ${platforms ? `<span class="client-meta-tag">${platforms}</span>` : ''}
           <span class="client-meta-tag">${p.scriptsPerWeek || 8} scripts/wk</span>
+          ${p.language && p.language !== 'English' ? `<span class="client-meta-tag">${p.language}</span>` : ''}
+          ${p.clientPin ? '<span class="client-meta-tag">🔒 Portal</span>' : ''}
           ${p.icpDoc ? '<span class="client-meta-tag">ICP ✓</span>' : ''}
           ${p.offerDoc ? '<span class="client-meta-tag">Offer ✓</span>' : ''}
           ${p.toneDoc ? '<span class="client-meta-tag">Tone ✓</span>' : ''}
@@ -851,6 +872,15 @@ function renderPersonaFilters(personas) {
   const group = $('persona-filter-group');
   if (!group) return;
 
+  // In client mode, show only the client's name as a non-interactive label
+  if (clientMode && clientModeId) {
+    const p = personas.find(x => x.id === clientModeId);
+    group.innerHTML = p
+      ? `<span class="filter-btn active" style="cursor:default">${esc(p.name)}</span>`
+      : '';
+    return;
+  }
+
   // Preserve active state
   const current = libFilters.personaId;
 
@@ -1231,6 +1261,114 @@ function bindSettings() {
 function renderSettings() {
   const key = getApiKey();
   $('settings-api-key').value = key ? key : '';
+}
+
+// ─── CLIENT PORTAL ────────────────────────────────────────────────────────────
+function bindPortal() {
+  $('open-portal-btn').addEventListener('click', openPortalLogin);
+  $('portal-close-btn').addEventListener('click', closePortalLogin);
+  $('portal-overlay').addEventListener('click', e => {
+    if (e.target === $('portal-overlay')) closePortalLogin();
+  });
+  $('portal-login-btn').addEventListener('click', attemptPortalLogin);
+  $('portal-pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') attemptPortalLogin(); });
+  $('client-logout-btn').addEventListener('click', exitClientMode);
+
+  $('portal-client-select').addEventListener('change', function () {
+    const personaId = this.value;
+    const p = personaId ? getPersona(personaId) : null;
+    const pinGroup = $('portal-pin-group');
+    if (p && p.clientPin) {
+      pinGroup.style.display = '';
+      $('portal-pin-input').value = '';
+      $('portal-pin-input').focus();
+    } else {
+      pinGroup.style.display = 'none';
+    }
+    hide('portal-error');
+  });
+}
+
+function openPortalLogin() {
+  const personas = loadPersonas().filter(p => p.clientPin);
+  const sel = $('portal-client-select');
+  sel.innerHTML = '<option value="">— Select a client —</option>' +
+    personas.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  $('portal-pin-group').style.display = 'none';
+  $('portal-pin-input').value = '';
+  hide('portal-error');
+  show('portal-overlay');
+
+  if (personas.length === 0) {
+    $('portal-login-btn').disabled = true;
+    $('portal-login-btn').title = 'No clients have a portal PIN set';
+  } else {
+    $('portal-login-btn').disabled = false;
+    $('portal-login-btn').title = '';
+  }
+}
+
+function closePortalLogin() {
+  hide('portal-overlay');
+}
+
+function attemptPortalLogin() {
+  const personaId = $('portal-client-select').value;
+  if (!personaId) {
+    flash($('portal-login-btn'), 'Select a client first');
+    return;
+  }
+  const p = getPersona(personaId);
+  if (!p) return;
+
+  if (p.clientPin) {
+    const entered = $('portal-pin-input').value;
+    if (entered !== p.clientPin) {
+      show('portal-error');
+      $('portal-pin-input').value = '';
+      $('portal-pin-input').focus();
+      return;
+    }
+  }
+
+  closePortalLogin();
+  enterClientMode(personaId);
+}
+
+function enterClientMode(personaId) {
+  clientMode   = true;
+  clientModeId = personaId;
+
+  const p = getPersona(personaId);
+
+  // Show banner, hide agency nav items
+  $('client-mode-name').textContent = p?.name || 'Client';
+  show('client-mode-banner');
+
+  // Hide agency-only nav buttons
+  document.querySelectorAll('.nav-btn:not(.nav-settings)').forEach(btn => {
+    if (btn.dataset.view !== 'library') btn.classList.add('hidden');
+  });
+  $('open-portal-btn').classList.add('hidden');
+
+  // Force library view, filtered to this client
+  libFilters.personaId = personaId;
+  switchView('library');
+}
+
+function exitClientMode() {
+  clientMode   = false;
+  clientModeId = null;
+
+  hide('client-mode-banner');
+
+  // Restore nav
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('hidden'));
+  $('open-portal-btn').classList.remove('hidden');
+
+  // Reset persona filter
+  libFilters.personaId = 'all';
+  switchView('clients');
 }
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
